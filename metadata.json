@@ -1,0 +1,6 @@
+{
+  "name": "AI System Architect & Portfolio",
+  "description": "Production AI Engineering Portfolio featuring RAG, Multi-Agent Systems, Computer Vision, Case Studies, Architecture Diagrams, and Interactive Playground",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

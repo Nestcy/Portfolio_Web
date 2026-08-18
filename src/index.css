@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0d0c0b;
+  --ink: #dfdbd7;
+  --accent: #ff4d00;
+  --accent-hover: #ff6622;
+  --panel: #161514;
+  --border: #2a2826;
+  --input-bg: #1a1918;
+  --ink-faint: rgba(223, 219, 215, 0.1);
+  --ink-muted: rgba(223, 219, 215, 0.4);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    cursor: crosshair;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist Mono', 'Space Mono', monospace;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle, rgba(255, 77, 0, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 0px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+}
+
+.font-oswald {
+  font-family: 'Oswald', sans-serif;
+}
+
+.font-syne {
+  font-family: 'Oswald', 'Syne', sans-serif;
+}
+
+.font-mono-tech, .font-geist {
+  font-family: 'Geist Mono', 'Space Mono', monospace;
+}
+
+.label-tag {
+  font-size: 0.6rem;
+  background: var(--border);
+  color: var(--ink);
+  padding: 2px 6px;
+  margin-bottom: 6px;
+  display: inline-block;
+  font-family: 'Geist Mono', 'Space Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.corner-label {
+  font-size: 0.55rem;
+  color: var(--accent);
+  opacity: 0.85;
+  font-family: 'Geist Mono', 'Space Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.tactical-input {
+  width: 100%;
+  background: #1a1918;
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 10px 12px;
+  font-family: 'Geist Mono', 'Space Mono', monospace;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tactical-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(255, 77, 0, 0.12);
+}
+
+.interface-cell {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  position: relative;
+}
+
+/* Printable PDF & Resume Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #resume-modal-container, #resume-modal-container * {
+    visibility: visible;
+  }
+  #resume-modal-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+    border: none !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  #resume-modal-container div, 
+  #resume-modal-container p, 
+  #resume-modal-container span, 
+  #resume-modal-container li,
+  #resume-modal-container ul {
+    background: transparent !important;
+    color: #111111 !important;
+    border-color: #e5e7eb !important;
+  }
+  #resume-modal-container h1, 
+  #resume-modal-container h2 {
+    color: #000000 !important;
+  }
+  #resume-modal-container .text-\[\#ff4d00\] {
+    color: #ea580c !important;
+  }
+  #resume-modal-container .label-tag {
+    background: #f3f4f6 !important;
+    color: #ea580c !important;
+    border: 1px solid #e5e7eb !important;
+  }
+}
+
