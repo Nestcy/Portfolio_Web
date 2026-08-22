@@ -1,0 +1,31 @@
+{
+  "entities": {
+    "portfolio_data": {
+      "title": "Portfolio Content",
+      "description": "Live production portfolio data synchronized from Admin OS",
+      "properties": {
+        "personalInfo": { "type": "object", "description": "Personal and contact information" },
+        "projects": { "type": "array", "description": "List of engineering projects" },
+        "skills": { "type": "array", "description": "Categorized skill matrix" },
+        "certifications": { "type": "array", "description": "Verifiable industry credentials" },
+        "timeline": { "type": "array", "description": "Career telemetry milestones" },
+        "stats": { "type": "array", "description": "Key impact metrics" },
+        "mediaItems": { "type": "array", "description": "Media library and photo assets" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      },
+      "required": ["personalInfo", "projects", "updatedAt"]
+    },
+    "inquiries": {
+      "title": "Contact Inquiries",
+      "description": "Visitor contact and collaboration messages",
+      "properties": {
+        "name": { "type": "string", "description": "Sender name" },
+        "email": { "type": "string", "description": "Sender email" },
+        "message": { "type": "string", "description": "Message body" },
+        "timestamp": { "type": "string", "description": "Sent timestamp" },
+        "read": { "type": "boolean", "description": "Read status" }
+      },
+      "required": ["name", "email", "message", "timestamp"]
+    }
+  }
+}

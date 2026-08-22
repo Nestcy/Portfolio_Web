@@ -1,16 +1,16 @@
 import { Project, BlogPost, Certification, SkillItem, TimelineItem, VideoShowcaseItem, GitHubRepo } from '../types';
 
 export const PERSONAL_INFO = {
-  name: "Alex Rivera",
+  name: "Nestcy",
   title: "Lead AI Systems Architect & Staff ML Engineer",
-  handle: "@alexrivera_ai",
-  email: "alex.rivera@ai-arch.dev",
+  handle: "@Nestcy",
+  email: "nestcy770@gmail.com",
   location: "San Francisco, CA (Open to Remote / Hybrid)",
   bio: "Architecting fault-tolerant LLM infrastructure, real-time multi-agent swarms, hybrid RAG engines, and low-latency computer vision pipelines for high-throughput enterprise scale.",
   availability: "Open for Staff AI Roles, Advisory & System Consulting",
-  github: "https://github.com/alexrivera-ai",
-  linkedin: "https://linkedin.com/in/alexrivera-ai",
-  twitter: "https://x.com/alexrivera_ai",
+  github: "https://github.com/Nestcy",
+  linkedin: "https://linkedin.com/in/nestcy",
+  twitter: "https://x.com/nestcy",
   profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
   avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
   heroTitle: "Building Intelligent Systems, Not Just Software.",
@@ -131,7 +131,7 @@ def plan_gate_node(state: CampaignState):
     ],
     technologies: ["FastAPI", "Qdrant", "PyTorch", "BGE-M3", "FlashRank", "Redis", "Docker", "LangChain"],
     featured: true,
-    githubUrl: "https://github.com/alexrivera-ai/rag-nexus-enterprise",
+    githubUrl: "https://github.com/Nestcy/rag-nexus-enterprise",
     liveDemoUrl: "https://rag-nexus.demo.ai-arch.dev",
     videoDemoUrl: "https://youtube.com/watch?v=demo_rag_nexus",
     metrics: [
@@ -202,7 +202,7 @@ def plan_gate_node(state: CampaignState):
     ],
     technologies: ["LangGraph", "Python", "MCP Protocol", "TypeScript", "FastAPI", "PostgreSQL", "Docker", "Temporal.io"],
     featured: true,
-    githubUrl: "https://github.com/alexrivera-ai/agentic-swarm-mcp",
+    githubUrl: "https://github.com/Nestcy/agentic-swarm-mcp",
     liveDemoUrl: "https://agentic-swarm.demo.ai-arch.dev",
     videoDemoUrl: "https://youtube.com/watch?v=demo_agentic_swarm",
     metrics: [
@@ -271,7 +271,7 @@ export function createSwarmWorkflow() {
     ],
     technologies: ["TensorRT", "YOLOv8", "OpenCV", "PyTorch", "NVIDIA Jetson", "C++", "CUDA", "gRPC"],
     featured: true,
-    githubUrl: "https://github.com/alexrivera-ai/vision-defect-guard",
+    githubUrl: "https://github.com/Nestcy/vision-defect-guard",
     liveDemoUrl: "https://visionguard.demo.ai-arch.dev",
     videoDemoUrl: "https://youtube.com/watch?v=demo_visionguard",
     metrics: [
@@ -330,7 +330,7 @@ export function createSwarmWorkflow() {
     ],
     technologies: ["vLLM", "Python", "Rust", "Ray", "Triton Inference Server", "Kubernetes", "Prometheus"],
     featured: false,
-    githubUrl: "https://github.com/alexrivera-ai/vllm-speculative-gateway",
+    githubUrl: "https://github.com/Nestcy/vllm-speculative-gateway",
     liveDemoUrl: "https://llm-gateway.demo.ai-arch.dev",
     metrics: [
       { label: "Token Acceleration", value: "2.4x Speedup" },
@@ -381,7 +381,7 @@ export const BLOG_POSTS_DATA: BlogPost[] = [
     publishedDate: "2026-06-18",
     readTime: "9 min read",
     author: {
-      name: "Alex Rivera",
+      name: "Nestcy",
       role: "Lead AI Systems Architect",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
     },
@@ -441,7 +441,7 @@ By scoring candidates using Reciprocal Rank Fusion (RRF), we get the best of bot
     publishedDate: "2026-05-22",
     readTime: "11 min read",
     author: {
-      name: "Alex Rivera",
+      name: "Nestcy",
       role: "Lead AI Systems Architect",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
     },
@@ -487,7 +487,7 @@ Early framework attempts forced agent steps into Directed Acyclic Graphs (DAGs).
     publishedDate: "2026-04-10",
     readTime: "14 min read",
     author: {
-      name: "Alex Rivera",
+      name: "Nestcy",
       role: "Lead AI Systems Architect",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
     },
@@ -664,13 +664,23 @@ export const VIDEO_SHOWCASE_DATA: VideoShowcaseItem[] = [
 
 export const GITHUB_REPOS_DATA: GitHubRepo[] = [
   {
+    name: "marketing_agent",
+    description: "Agentic content calendar platform with LangGraph, Groq Llama 3, and two human-approval gates.",
+    stars: 840,
+    forks: 95,
+    language: "Python",
+    languageColor: "#3572A5",
+    url: "https://github.com/Nestcy/marketing_agent",
+    isPinned: true
+  },
+  {
     name: "rag-nexus-enterprise",
     description: "Production hybrid dense-sparse RAG retrieval engine with FlashRank reranking and Qdrant vector clustering.",
     stars: 1420,
     forks: 210,
     language: "Python",
     languageColor: "#3572A5",
-    url: "https://github.com/alexrivera-ai/rag-nexus-enterprise",
+    url: "https://github.com/Nestcy/rag-nexus-enterprise",
     isPinned: true
   },
   {
@@ -680,7 +690,7 @@ export const GITHUB_REPOS_DATA: GitHubRepo[] = [
     forks: 340,
     language: "TypeScript",
     languageColor: "#3178C6",
-    url: "https://github.com/alexrivera-ai/agentic-swarm-mcp",
+    url: "https://github.com/Nestcy/agentic-swarm-mcp",
     isPinned: true
   },
   {
@@ -690,17 +700,7 @@ export const GITHUB_REPOS_DATA: GitHubRepo[] = [
     forks: 115,
     language: "Rust",
     languageColor: "#dea584",
-    url: "https://github.com/alexrivera-ai/vllm-speculative-gateway",
-    isPinned: true
-  },
-  {
-    name: "cuda-vision-defect-guard",
-    description: "Real-time 128 FPS TensorRT INT8 defect detection pipeline for industrial edge GPUs.",
-    stars: 640,
-    forks: 82,
-    language: "C++",
-    languageColor: "#f34b7d",
-    url: "https://github.com/alexrivera-ai/cuda-vision-defect-guard",
+    url: "https://github.com/Nestcy/vllm-speculative-gateway",
     isPinned: true
   }
 ];

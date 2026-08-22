@@ -237,7 +237,7 @@ ${certifications.map(c => `- **${c.title}** — ${c.institution} (\`${c.issueDat
                     value={personalInfo.name}
                     onChange={(e) => updatePersonalInfo({ name: e.target.value })}
                     className="tactical-input"
-                    placeholder="E.g. Alex Rivera"
+                    placeholder="E.g. Nestcy"
                   />
                 </div>
 
@@ -248,7 +248,7 @@ ${certifications.map(c => `- **${c.title}** — ${c.institution} (\`${c.issueDat
                     value={personalInfo.title}
                     onChange={(e) => updatePersonalInfo({ title: e.target.value })}
                     className="tactical-input"
-                    placeholder="E.g. Staff AI Systems Architect"
+                    placeholder="E.g. Lead AI Systems Architect"
                   />
                 </div>
 
@@ -259,7 +259,7 @@ ${certifications.map(c => `- **${c.title}** — ${c.institution} (\`${c.issueDat
                     value={personalInfo.email}
                     onChange={(e) => updatePersonalInfo({ email: e.target.value })}
                     className="tactical-input text-[#ff4d00]"
-                    placeholder="alex@rivera.ai"
+                    placeholder="nestcy770@gmail.com"
                   />
                 </div>
 

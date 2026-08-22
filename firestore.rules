@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Portfolio Data - public read, write allowed for CMS sync
+    match /portfolio_data/{document} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Inquiries - public write (contact form), read by portfolio
+    match /inquiries/{inquiryId} {
+      allow read, write: if true;
+    }
+
+    // Security & audit logs
+    match /audit_logs/{logId} {
+      allow read, write: if true;
+    }
+  }
+}

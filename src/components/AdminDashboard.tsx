@@ -24,7 +24,10 @@ import {
   Shield,
   Clock,
   Menu,
-  X
+  X,
+  Cloud,
+  CloudCheck,
+  CloudAlert
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -48,12 +51,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     isAdminAuthenticated,
     logoutAdmin,
     sessionRemainingSeconds,
-    auditLogs
+    auditLogs,
+    cloudSyncStatus,
+    lastCloudSyncTime,
+    forceSyncToCloud,
+    forcePullFromCloud
   } = usePortfolio();
 
   const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'skills' | 'certifications' | 'timeline' | 'media' | 'security'>('profile');
   const [notification, setNotification] = useState<string | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
+  const [isManualSyncing, setIsManualSyncing] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,6 +73,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3500);
+  };
+
+  const handleManualSync = async () => {
+    setIsManualSyncing(true);
+    const success = await forceSyncToCloud();
+    setIsManualSyncing(false);
+    if (success) {
+      showNotification('Firebase Firestore successfully synced with current data!');
+    } else {
+      showNotification('Firebase sync encountered an issue. Check connection.');
+    }
+  };
+
+  const handleManualPull = async () => {
+    setIsManualSyncing(true);
+    const success = await forcePullFromCloud();
+    setIsManualSyncing(false);
+    if (success) {
+      showNotification('Successfully fetched fresh portfolio data from Firebase!');
+    } else {
+      showNotification('Failed to pull from cloud or no remote doc found.');
+    }
   };
 
   const handleExportBackup = () => {
@@ -87,7 +117,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const content = event.target?.result as string;
       const success = importBackupJSON(content);
       if (success) {
-        showNotification('System state restored from JSON backup!');
+        showNotification('System state restored from JSON backup & autosynced to cloud!');
       } else {
         showNotification('Failed to parse backup JSON. Please check file format.');
       }
@@ -152,6 +182,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
           {/* Quick Header Controls & Status Badges */}
           <div className="flex items-center justify-end px-4 sm:px-6 py-2.5 gap-2.5 font-mono text-xs">
+            
+            {/* Cloud Sync Status Indicator */}
+            <div className={`hidden sm:flex items-center space-x-1.5 px-2.5 py-1 border text-[10px] uppercase tracking-wider ${
+              cloudSyncStatus === 'synced' 
+                ? 'bg-[#101b13] border-emerald-800/60 text-emerald-400'
+                : cloudSyncStatus === 'syncing'
+                ? 'bg-[#1e150a] border-amber-800/60 text-amber-400 animate-pulse'
+                : 'bg-[#1f1111] border-red-800/60 text-red-400'
+            }`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                cloudSyncStatus === 'synced' ? 'bg-emerald-400' : cloudSyncStatus === 'syncing' ? 'bg-amber-400' : 'bg-red-400'
+              }`} />
+              <span>
+                {cloudSyncStatus === 'synced' ? 'FIREBASE: LIVE' : cloudSyncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE'}
+              </span>
+              {lastCloudSyncTime && (
+                <span className="text-zinc-500 hidden xl:inline">({lastCloudSyncTime})</span>
+              )}
+            </div>
+
             <div className="label-tag bg-[#ff4d00] text-[#0d0c0b] font-bold m-0 px-2.5 py-1 text-[10px] hidden sm:inline-block tracking-wider">
               ENCRYPTED_LINK
             </div>
@@ -162,6 +212,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <span>TIMEOUT: {Math.floor(sessionRemainingSeconds / 60)}m {sessionRemainingSeconds % 60}s</span>
               </div>
             )}
+
+            <button
+              onClick={handleManualSync}
+              disabled={isManualSyncing}
+              className="px-2.5 py-1.5 border border-[#2a2826] hover:border-emerald-500/60 bg-[#161514] text-[#dfdbd7] text-[10px] uppercase tracking-wider transition-colors flex items-center space-x-1"
+              title="Force Sync to Firebase Firestore"
+            >
+              <RefreshCw className={`w-3 h-3 text-emerald-400 ${isManualSyncing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Sync Cloud</span>
+            </button>
 
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -343,6 +403,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="flex justify-between">
                 <span className="text-zinc-500">EVENTS:</span>
                 <span className="text-white">{auditLogs.length} Logged</span>
+              </div>
+            </div>
+
+            {/* Cloud Persistence Module */}
+            <div className="p-4 space-y-2.5 text-[10px] bg-[#121110]">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-400 font-bold tracking-wider flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${cloudSyncStatus === 'synced' ? 'bg-emerald-400' : cloudSyncStatus === 'syncing' ? 'bg-amber-400 animate-ping' : 'bg-red-400'}`} />
+                  FIRESTORE CLOUD
+                </span>
+                <span className={`font-mono text-[9px] uppercase ${cloudSyncStatus === 'synced' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {cloudSyncStatus === 'synced' ? 'CONNECTED' : cloudSyncStatus === 'syncing' ? 'WRITING...' : 'STANDALONE'}
+                </span>
+              </div>
+              <div className="text-[9px] text-zinc-500 font-mono">
+                {lastCloudSyncTime ? `Last synced at ${lastCloudSyncTime}` : 'Autosync active upon edits'}
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 pt-1">
+                <button
+                  onClick={handleManualSync}
+                  disabled={isManualSyncing}
+                  className="py-1 px-2 bg-[#1a1817] hover:bg-[#252321] border border-[#2a2826] text-zinc-300 hover:text-white text-[9px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors"
+                >
+                  <RefreshCw className={`w-2.5 h-2.5 text-emerald-400 ${isManualSyncing ? 'animate-spin' : ''}`} />
+                  Push
+                </button>
+                <button
+                  onClick={handleManualPull}
+                  disabled={isManualSyncing}
+                  className="py-1 px-2 bg-[#1a1817] hover:bg-[#252321] border border-[#2a2826] text-zinc-300 hover:text-white text-[9px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors"
+                >
+                  <Download className="w-2.5 h-2.5 text-sky-400" />
+                  Pull
+                </button>
               </div>
             </div>
 

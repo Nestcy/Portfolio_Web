@@ -141,7 +141,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onOpenResume }) 
               
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-white font-sans">Send a Direct Message</h3>
-                <p className="text-xs text-zinc-500 font-sans">Directly populates Alex's priority inbox queue.</p>
+                <p className="text-xs text-zinc-500 font-sans">Directly populates {personalInfo.name}'s priority inbox queue.</p>
               </div>
 
               {/* Quick Topic Chips */}
@@ -170,7 +170,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onOpenResume }) 
                   <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
                   <h4 className="text-sm font-bold text-white">Message Transmitted Successfully</h4>
                   <p className="text-xs text-zinc-400">
-                    Thank you for reaching out. Alex typically responds to recruitment & technical inquiries within 12 hours.
+                    Thank you for reaching out. {personalInfo.name} typically responds to recruitment & technical inquiries within 12 hours.
                   </p>
                   <button
                     onClick={() => setSentSuccess(false)}

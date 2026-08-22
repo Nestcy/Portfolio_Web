@@ -13,7 +13,7 @@ export const AiPlaygroundSection: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<Array<{ sender: 'user' | 'assistant'; text: string; source?: string }>>([
     {
       sender: 'assistant',
-      text: "Hello! I am Alex's AI Architecture Assistant. Ask me anything about Alex's production RAG systems, multi-agent LangGraph pipelines, or model evaluation benchmarks.",
+      text: "Hello! I am Nestcy's AI Architecture Assistant. Ask me anything about Nestcy's production RAG systems, multi-agent LangGraph pipelines, or model evaluation benchmarks.",
       source: "gemini-2.5-flash"
     }
   ]);

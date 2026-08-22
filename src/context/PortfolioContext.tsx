@@ -26,6 +26,7 @@ import {
   DEFAULT_SALT,
   generateRandomSalt
 } from '../utils/security';
+import { db, doc, getDoc, setDoc, onSnapshot, PORTFOLIO_DOC_PATH } from '../lib/firebase';
 
 export interface WorkExperienceItem {
   id: string;
@@ -128,19 +129,19 @@ const INITIAL_SECURITY_SETTINGS: SecuritySettings = {
 };
 
 const STORAGE_KEYS = {
-  PROJECTS: 'alexrivera_projects_v2',
-  PERSONAL_INFO: 'alexrivera_personal_info_v2',
-  EXPERIENCE: 'alexrivera_experience_v2',
-  EDUCATION: 'alexrivera_education_v2',
-  SKILLS: 'alexrivera_skills_v2',
-  CERTIFICATIONS: 'alexrivera_certifications_v2',
-  TIMELINE: 'alexrivera_timeline_v2',
-  BLOG_POSTS: 'alexrivera_blog_posts_v2',
-  PASSCODE_HASH: 'alexrivera_passcode_hash_v2',
-  PASSCODE_SALT: 'alexrivera_passcode_salt_v2',
-  SECURITY_SETTINGS: 'alexrivera_security_settings_v2',
-  AUDIT_LOGS: 'alexrivera_audit_logs_v2',
-  AUTH_SESSION: 'alexrivera_auth_session_v2'
+  PROJECTS: 'nestcy_projects_v3',
+  PERSONAL_INFO: 'nestcy_personal_info_v3',
+  EXPERIENCE: 'nestcy_experience_v3',
+  EDUCATION: 'nestcy_education_v3',
+  SKILLS: 'nestcy_skills_v3',
+  CERTIFICATIONS: 'nestcy_certifications_v3',
+  TIMELINE: 'nestcy_timeline_v3',
+  BLOG_POSTS: 'nestcy_blog_posts_v3',
+  PASSCODE_HASH: 'nestcy_passcode_hash_v3',
+  PASSCODE_SALT: 'nestcy_passcode_salt_v3',
+  SECURITY_SETTINGS: 'nestcy_security_settings_v3',
+  AUDIT_LOGS: 'nestcy_audit_logs_v3',
+  AUTH_SESSION: 'nestcy_auth_session_v3'
 };
 
 interface PortfolioContextType {
@@ -156,6 +157,12 @@ interface PortfolioContextType {
   videoShowcases: VideoShowcaseItem[];
   githubRepos: GitHubRepo[];
   
+  // Cloud Sync & Firestore Status
+  cloudSyncStatus: 'synced' | 'syncing' | 'offline' | 'error';
+  lastCloudSyncTime: string | null;
+  forceSyncToCloud: () => Promise<boolean>;
+  forcePullFromCloud: () => Promise<boolean>;
+
   // Projects CRUD & Upload
   addProject: (project: Project) => void;
   updateProject: (id: string, updated: Partial<Project>) => void;
@@ -287,6 +294,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [videoShowcases] = useState<VideoShowcaseItem[]>(INITIAL_VIDEO_SHOWCASE_DATA);
   const [githubRepos] = useState<GitHubRepo[]>(INITIAL_GITHUB_REPOS_DATA);
 
+  // Cloud Sync State
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('synced');
+  const [lastCloudSyncTime, setLastCloudSyncTime] = useState<string | null>(null);
+  const isInitialCloudLoadDone = useRef<boolean>(false);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Security State
   const [securitySettings, setSecuritySettings] = useState<SecuritySettings>(() => {
     try {
@@ -389,6 +402,186 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
   }, [auditLogs]);
+
+  // Push full payload to Firestore
+  const forceSyncToCloud = useCallback(async (): Promise<boolean> => {
+    setCloudSyncStatus('syncing');
+    try {
+      const docRef = doc(db, PORTFOLIO_DOC_PATH.collection, PORTFOLIO_DOC_PATH.id);
+      const payload = {
+        personalInfo,
+        projects,
+        workExperience,
+        education,
+        skills,
+        certifications,
+        timeline,
+        updatedAt: new Date().toISOString()
+      };
+      await setDoc(docRef, payload, { merge: true });
+      setCloudSyncStatus('synced');
+      setLastCloudSyncTime(new Date().toLocaleTimeString());
+      addAuditLog('CLOUD_SYNC_SUCCESS', 'SUCCESS', 'Synchronized live portfolio data to Firebase Firestore.');
+      return true;
+    } catch (err) {
+      console.error('Error syncing to Firestore:', err);
+      setCloudSyncStatus('error');
+      addAuditLog('CLOUD_SYNC_FAILED', 'WARNING', 'Failed to synchronize with Firestore: ' + (err as Error).message);
+      return false;
+    }
+  }, [personalInfo, projects, workExperience, education, skills, certifications, timeline, addAuditLog]);
+
+  // Pull full payload from Firestore
+  const forcePullFromCloud = useCallback(async (): Promise<boolean> => {
+    setCloudSyncStatus('syncing');
+    try {
+      const docRef = doc(db, PORTFOLIO_DOC_PATH.collection, PORTFOLIO_DOC_PATH.id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.personalInfo) setPersonalInfo(data.personalInfo);
+        if (data.projects) setProjects(data.projects);
+        if (data.workExperience) setWorkExperience(data.workExperience);
+        if (data.education) setEducation(data.education);
+        if (data.skills) setSkills(data.skills);
+        if (data.certifications) setCertifications(data.certifications);
+        if (data.timeline) setTimeline(data.timeline);
+        setCloudSyncStatus('synced');
+        setLastCloudSyncTime(new Date().toLocaleTimeString());
+        addAuditLog('CLOUD_PULL_SUCCESS', 'SUCCESS', 'Pulled fresh live state from Firebase Firestore.');
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error pulling from Firestore:', err);
+      setCloudSyncStatus('error');
+      return false;
+    }
+  }, [addAuditLog]);
+
+  // Initialize Firestore on mount and subscribe to live changes
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    const initFirestore = async () => {
+      try {
+        setCloudSyncStatus('syncing');
+        const docRef = doc(db, PORTFOLIO_DOC_PATH.collection, PORTFOLIO_DOC_PATH.id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const cloudData = docSnap.data();
+          // Check if cloud data contains stale legacy mock names (e.g. 'Alex Rivera') or valid user data
+          const isStaleData = cloudData.personalInfo && (cloudData.personalInfo.name === 'Alex Rivera' || cloudData.personalInfo.email === 'alex.rivera@ai-arch.dev');
+          
+          if (!isStaleData) {
+            if (cloudData.personalInfo) setPersonalInfo(cloudData.personalInfo);
+            if (cloudData.projects && Array.isArray(cloudData.projects)) setProjects(cloudData.projects);
+            if (cloudData.workExperience && Array.isArray(cloudData.workExperience)) setWorkExperience(cloudData.workExperience);
+            if (cloudData.education && Array.isArray(cloudData.education)) setEducation(cloudData.education);
+            if (cloudData.skills && Array.isArray(cloudData.skills)) setSkills(cloudData.skills);
+            if (cloudData.certifications && Array.isArray(cloudData.certifications)) setCertifications(cloudData.certifications);
+            if (cloudData.timeline && Array.isArray(cloudData.timeline)) setTimeline(cloudData.timeline);
+          } else {
+            // Overwrite stale legacy mock data with clean Nestcy default data in cloud
+            const cleanPayload = {
+              personalInfo: INITIAL_PERSONAL_INFO,
+              projects: INITIAL_PROJECTS_DATA,
+              workExperience: INITIAL_WORK_EXPERIENCE,
+              education: INITIAL_EDUCATION,
+              skills: INITIAL_SKILLS_DATA,
+              certifications: INITIAL_CERTIFICATIONS_DATA,
+              timeline: INITIAL_TIMELINE_DATA,
+              updatedAt: new Date().toISOString()
+            };
+            await setDoc(docRef, cleanPayload);
+            setPersonalInfo(INITIAL_PERSONAL_INFO);
+            setProjects(INITIAL_PROJECTS_DATA);
+            setWorkExperience(INITIAL_WORK_EXPERIENCE);
+            setEducation(INITIAL_EDUCATION);
+            setSkills(INITIAL_SKILLS_DATA);
+            setCertifications(INITIAL_CERTIFICATIONS_DATA);
+            setTimeline(INITIAL_TIMELINE_DATA);
+          }
+          setCloudSyncStatus('synced');
+          setLastCloudSyncTime(new Date().toLocaleTimeString());
+        } else {
+          // Document does not exist yet -> bootstrap it with current data
+          const initialPayload = {
+            personalInfo: INITIAL_PERSONAL_INFO,
+            projects: INITIAL_PROJECTS_DATA,
+            workExperience: INITIAL_WORK_EXPERIENCE,
+            education: INITIAL_EDUCATION,
+            skills: INITIAL_SKILLS_DATA,
+            certifications: INITIAL_CERTIFICATIONS_DATA,
+            timeline: INITIAL_TIMELINE_DATA,
+            updatedAt: new Date().toISOString()
+          };
+          await setDoc(docRef, initialPayload);
+          setCloudSyncStatus('synced');
+          setLastCloudSyncTime(new Date().toLocaleTimeString());
+        }
+
+        isInitialCloudLoadDone.current = true;
+
+        // Realtime subscription
+        unsubscribe = onSnapshot(docRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            if (data.updatedAt) {
+              setLastCloudSyncTime(new Date(data.updatedAt).toLocaleTimeString());
+            }
+          }
+        }, (err) => {
+          console.warn('Firestore snapshot error:', err);
+          setCloudSyncStatus('offline');
+        });
+
+      } catch (e) {
+        console.error('Firebase initial load error:', e);
+        setCloudSyncStatus('offline');
+      }
+    };
+
+    initFirestore();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
+  // Debounced auto-save to Firestore on changes (only after initial load completes)
+  useEffect(() => {
+    if (!isInitialCloudLoadDone.current) return;
+
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+
+    syncTimeoutRef.current = setTimeout(async () => {
+      try {
+        setCloudSyncStatus('syncing');
+        const docRef = doc(db, PORTFOLIO_DOC_PATH.collection, PORTFOLIO_DOC_PATH.id);
+        const payload = {
+          personalInfo,
+          projects,
+          workExperience,
+          education,
+          skills,
+          certifications,
+          timeline,
+          updatedAt: new Date().toISOString()
+        };
+        await setDoc(docRef, payload, { merge: true });
+        setCloudSyncStatus('synced');
+        setLastCloudSyncTime(new Date().toLocaleTimeString());
+      } catch (err) {
+        console.warn('Background Firestore autosave warning:', err);
+        setCloudSyncStatus('offline');
+      }
+    }, 1200);
+
+    return () => {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    };
+  }, [personalInfo, projects, workExperience, education, skills, certifications, timeline]);
 
   // Lockout Countdown Timer
   useEffect(() => {
@@ -686,7 +879,26 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setCertifications(INITIAL_CERTIFICATIONS_DATA);
     setTimeline(INITIAL_TIMELINE_DATA);
     localStorage.clear();
-    addAuditLog('DATA_RESET_FACTORY', 'WARNING', 'All portfolio collections restored to default factory seed data.');
+
+    // Push clean state directly to Firestore
+    try {
+      const docRef = doc(db, PORTFOLIO_DOC_PATH.collection, PORTFOLIO_DOC_PATH.id);
+      const cleanPayload = {
+        personalInfo: INITIAL_PERSONAL_INFO,
+        projects: INITIAL_PROJECTS_DATA,
+        workExperience: INITIAL_WORK_EXPERIENCE,
+        education: INITIAL_EDUCATION,
+        skills: INITIAL_SKILLS_DATA,
+        certifications: INITIAL_CERTIFICATIONS_DATA,
+        timeline: INITIAL_TIMELINE_DATA,
+        updatedAt: new Date().toISOString()
+      };
+      setDoc(docRef, cleanPayload);
+    } catch (e) {
+      console.warn('Error resetting cloud state:', e);
+    }
+
+    addAuditLog('DATA_RESET_FACTORY', 'WARNING', 'All portfolio collections restored to default factory seed data and synced.');
   };
 
   const exportBackupJSON = () => {
@@ -737,6 +949,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         blogPosts,
         videoShowcases,
         githubRepos,
+        cloudSyncStatus,
+        lastCloudSyncTime,
+        forceSyncToCloud,
+        forcePullFromCloud,
         addProject,
         updateProject,
         deleteProject,
