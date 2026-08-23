@@ -257,10 +257,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const saved = localStorage.getItem(STORAGE_KEYS.PERSONAL_INFO);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.name === 'Alex Rivera' || parsed.email === 'alex.rivera@ai-arch.dev' || parsed.name === 'Nestcy' || parsed.linkedin === 'https://linkedin.com/in/nestcy' || !parsed.profileImage || parsed.profileImage.includes('photo-1534528741775-53994a69daeb')) {
+        if (parsed.name === 'Alex Rivera' || parsed.email === 'alex.rivera@ai-arch.dev' || parsed.name === 'Nestcy' || parsed.linkedin === 'https://linkedin.com/in/nestcy' || !parsed.profileImage || parsed.profileImage.includes('photo-1534528741775-53994a69daeb') || parsed.bio?.includes('Architecting fault-tolerant') || parsed.heroSubtitle?.includes('AI System Architect specializing in')) {
           return {
             ...INITIAL_PERSONAL_INFO,
             ...parsed,
+            bio: INITIAL_PERSONAL_INFO.bio,
+            heroSubtitle: INITIAL_PERSONAL_INFO.heroSubtitle,
             profileImage: (!parsed.profileImage || parsed.profileImage.includes('photo-1534528741775-53994a69daeb')) ? INITIAL_PERSONAL_INFO.profileImage : parsed.profileImage,
             avatarUrl: (!parsed.avatarUrl || parsed.avatarUrl.includes('photo-1534528741775-53994a69daeb')) ? INITIAL_PERSONAL_INFO.avatarUrl : parsed.avatarUrl,
           };
@@ -556,7 +558,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             cloudData.personalInfo.name === 'Alex Rivera' || 
             cloudData.personalInfo.email === 'alex.rivera@ai-arch.dev' || 
             cloudData.personalInfo.name === 'Nestcy' || 
-            cloudData.personalInfo.linkedin === 'https://linkedin.com/in/nestcy'
+            cloudData.personalInfo.linkedin === 'https://linkedin.com/in/nestcy' ||
+            cloudData.personalInfo.bio?.includes('Architecting fault-tolerant')
           );
           
           const hasLegacyMockTimeline = cloudData.timeline && Array.isArray(cloudData.timeline) && cloudData.timeline.some((t: any) => t.id === 't1' || t.organization === 'Cognitive Scale AI (San Francisco, CA)');
