@@ -55,7 +55,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     cloudSyncStatus,
     lastCloudSyncTime,
     forceSyncToCloud,
-    forcePullFromCloud
+    forcePullFromCloud,
+    hasEmergencyBackup,
+    restoreEmergencyBackup
   } = usePortfolio();
 
   const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'skills' | 'certifications' | 'timeline' | 'media' | 'security'>('profile');
@@ -94,6 +96,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       showNotification('Successfully fetched fresh portfolio data from Firebase!');
     } else {
       showNotification('Failed to pull from cloud or no remote doc found.');
+    }
+  };
+
+  const handleRestoreEmergency = () => {
+    const success = restoreEmergencyBackup();
+    if (success) {
+      showNotification('Emergency backup restored successfully!');
+      handleManualSync();
+    } else {
+      showNotification('No local emergency backup found.');
     }
   };
 
@@ -211,6 +223,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <Clock className="w-3 h-3 text-[#ff4d00]" />
                 <span>TIMEOUT: {Math.floor(sessionRemainingSeconds / 60)}m {sessionRemainingSeconds % 60}s</span>
               </div>
+            )}
+
+            {hasEmergencyBackup && (
+              <button
+                onClick={handleRestoreEmergency}
+                className="px-2.5 py-1.5 border border-amber-600/60 hover:border-amber-400 bg-[#1e170c] text-amber-300 text-[10px] uppercase tracking-wider transition-colors flex items-center space-x-1"
+                title="Restore from Local Auto-Backup"
+              >
+                <RefreshCw className="w-3 h-3 text-amber-400" />
+                <span className="hidden sm:inline">Auto-Backup</span>
+              </button>
             )}
 
             <button

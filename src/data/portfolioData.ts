@@ -561,68 +561,221 @@ export const CERTIFICATIONS_DATA: Certification[] = [
 ];
 
 export const SKILLS_DATA: SkillItem[] = [
-  // LLMs & AI Agents
-  { name: "LLM Fine-Tuning (LoRA / QLoRA)", category: "LLMs", proficiency: 96, level: "Expert", iconName: "Cpu", yearsExperience: "4 yrs", description: "PEFT, Unsloth, Axolotl, DeepSpeed ZeRO-3 fine-tuning on domain datasets." },
-  { name: "LangGraph & Multi-Agent Swarms", category: "AI Agents", proficiency: 98, level: "Expert", iconName: "Bot", yearsExperience: "3 yrs", description: "Cyclic state graphs, supervisor agents, human-in-the-loop approval workflows." },
-  { name: "RAG & Vector Search Engines", category: "LLMs", proficiency: 98, level: "Expert", iconName: "Database", yearsExperience: "4 yrs", description: "Qdrant, Milvus, Pinecone, BM25 hybrid fusion, cross-encoder reranking." },
-  { name: "Model Context Protocol (MCP)", category: "AI Agents", proficiency: 95, level: "Expert", iconName: "Workflow", yearsExperience: "2 yrs", description: "Building custom MCP servers, secure tool execution, JSON-RPC transports." },
-  
-  // Machine Learning & Deep Learning
-  { name: "PyTorch & CUDA Acceleration", category: "Deep Learning", proficiency: 94, level: "Expert", iconName: "Zap", yearsExperience: "5 yrs", description: "Custom CUDA C++ kernels, PyTorch 2.0 compile, FlashAttention-3 integration." },
-  { name: "Transformer Math & Architectures", category: "Machine Learning", proficiency: 96, level: "Expert", iconName: "Binary", yearsExperience: "5 yrs", description: "KV-cache management, speculative decoding, RoPE embeddings, GQA attention." },
-  
-  // Computer Vision
-  { name: "YOLOv8 & TensorRT Edge Vision", category: "Computer Vision", proficiency: 92, level: "Expert", iconName: "Eye", yearsExperience: "4 yrs", description: "Sub-10ms real-time object detection, NVIDIA DeepStream, INT8 quantization." },
-  { name: "Segment Anything (SAM) & OpenCV", category: "Computer Vision", proficiency: 90, level: "Advanced", iconName: "Camera", yearsExperience: "3 yrs", description: "Zero-shot visual segmentation, CUDA video streaming ring buffers." },
+  // Backend
+  {
+    name: "Python",
+    category: "Backend",
+    proficiency: 96,
+    level: "Expert",
+    iconName: "Code2",
+    yearsExperience: "2024 - Present",
+    description: "Python is the foundation of my AI engineering workflow. I use it to build modular backend services, orchestrate agent workflows, integrate LLM APIs, implement retrieval pipelines, and expose AI capabilities through maintainable REST APIs. My focus is on writing composable components that separate orchestration, business logic, and infrastructure."
+  },
+  {
+    name: "FastAPI",
+    category: "Backend",
+    proficiency: 93,
+    level: "Expert",
+    iconName: "Server",
+    yearsExperience: "2025 - Present",
+    description: "I use FastAPI to expose AI capabilities as production-ready APIs. My services are designed with typed request/response schemas, dependency injection, asynchronous endpoints where appropriate, and clear separation between application logic and AI orchestration."
+  },
 
-  // Backend & Cloud & MLOps
-  { name: "FastAPI & High-Throughput Async", category: "Backend", proficiency: 95, level: "Expert", iconName: "Server", yearsExperience: "5 yrs", description: "Async HTTP/WebSockets, streaming response generation, gRPC microservices." },
-  { name: "vLLM & Ray Distributed Inference", category: "DevOps", proficiency: 92, level: "Expert", iconName: "Cloud", yearsExperience: "3 yrs", description: "PagedAttention memory pools, continuous batching, multi-GPU server clusters." },
-  { name: "Docker, Kubernetes & Helm", category: "Cloud", proficiency: 88, level: "Advanced", iconName: "Layers", yearsExperience: "4 yrs", description: "Containerizing GPU workloads, K8s autoscaling based on queue depth metrics." },
-  { name: "PostgreSQL, Redis & Qdrant", category: "Databases", proficiency: 94, level: "Expert", iconName: "HardDrive", yearsExperience: "5 yrs", description: "pgvector index tuning, Redis caching layers, Qdrant HNSW payload search." },
-  { name: "React, TypeScript & Tailwind CSS", category: "Frontend", proficiency: 92, level: "Expert", iconName: "Code2", yearsExperience: "5 yrs", description: "Building high-performance AI web dashboards, live streaming UI components." }
+  // AI Agents
+  {
+    name: "LangGraph",
+    category: "AI Agents",
+    proficiency: 95,
+    level: "Expert",
+    iconName: "Workflow",
+    yearsExperience: "2025 - Present",
+    description: "I use LangGraph to build stateful agent workflows where each node has a clearly defined responsibility. Rather than relying on unconstrained prompt chains, I model execution as deterministic graphs with explicit state transitions, tool invocation, and conditional routing."
+  },
+  {
+    name: "Agentic AI",
+    category: "AI Agents",
+    proficiency: 94,
+    level: "Expert",
+    iconName: "Bot",
+    yearsExperience: "2025 - Present",
+    description: "I design AI systems capable of planning, tool usage, retrieval, and multi-step execution. My focus is on building agents that operate within clearly defined boundaries, making decisions through structured workflows instead of unconstrained autonomous behavior."
+  },
+  {
+    name: "LangChain",
+    category: "AI Agents",
+    proficiency: 90,
+    level: "Advanced",
+    iconName: "Bot",
+    yearsExperience: "2025 - Present",
+    description: "I use LangChain as an orchestration layer for connecting language models with external tools, retrieval systems, prompts, and structured outputs. My emphasis is on building maintainable workflows instead of monolithic prompts."
+  },
+
+  // LLMs
+  {
+    name: "Retrieval-Augmented Generation (RAG)",
+    category: "LLMs",
+    proficiency: 95,
+    level: "Expert",
+    iconName: "Database",
+    yearsExperience: "2025 - Present",
+    description: "I build RAG systems that ground language models in trusted information through embeddings, semantic retrieval, and document indexing. My objective is to reduce hallucinations by ensuring responses are generated from relevant context instead of relying solely on model memory."
+  },
+  {
+    name: "OpenAI API / LLM APIs",
+    category: "LLMs",
+    proficiency: 95,
+    level: "Expert",
+    iconName: "Cpu",
+    yearsExperience: "2024 - Present",
+    description: "I integrate commercial language models as components within larger software systems. Rather than treating the model as the application, I combine LLM APIs with retrieval, validation, business logic, and tool execution to create dependable AI features."
+  },
+  {
+    name: "Prompt Engineering",
+    category: "LLMs",
+    proficiency: 96,
+    level: "Expert",
+    iconName: "Code2",
+    yearsExperience: "2024 - Present",
+    description: "I design prompts as structured interfaces rather than conversational text. My approach emphasizes role separation, explicit constraints, structured outputs, and deterministic instructions that improve consistency across AI workflows."
+  },
+  {
+    name: "Embeddings",
+    category: "LLMs",
+    proficiency: 92,
+    level: "Advanced",
+    iconName: "Binary",
+    yearsExperience: "2025 - Present",
+    description: "I use embeddings to transform unstructured documents into searchable semantic representations, enabling similarity search and contextual retrieval across educational and business knowledge bases."
+  },
+
+  // Databases
+  {
+    name: "ChromaDB",
+    category: "Databases",
+    proficiency: 91,
+    level: "Advanced",
+    iconName: "HardDrive",
+    yearsExperience: "2025 - Present",
+    description: "I use Chroma as a lightweight vector database for storing embeddings and supporting semantic retrieval pipelines. It enables efficient document lookup that feeds grounded context into downstream AI workflows."
+  },
+  {
+    name: "PostgreSQL",
+    category: "Databases",
+    proficiency: 89,
+    level: "Advanced",
+    iconName: "Database",
+    yearsExperience: "2025 - Present",
+    description: "I use PostgreSQL as the persistent data layer for AI applications, storing structured application data separately from vector representations while maintaining clean boundaries between transactional and retrieval workloads."
+  },
+  {
+    name: "SQL",
+    category: "Databases",
+    proficiency: 89,
+    level: "Advanced",
+    iconName: "Layers",
+    yearsExperience: "2024 - Present",
+    description: "I use SQL to model, query, and maintain relational data that supports AI applications, ensuring structured business data integrates cleanly with AI-driven workflows."
+  },
+
+  // DevOps
+  {
+    name: "Docker",
+    category: "DevOps",
+    proficiency: 86,
+    level: "Proficient",
+    iconName: "Layers",
+    yearsExperience: "2025 - Present",
+    description: "I containerize AI applications to create reproducible deployment environments, ensuring consistent execution across development, testing, and production infrastructure."
+  },
+  {
+    name: "Git & GitHub",
+    category: "DevOps",
+    proficiency: 92,
+    level: "Advanced",
+    iconName: "Code2",
+    yearsExperience: "2024 - Present",
+    description: "I use Git for version control and collaborative development, organizing projects around incremental commits, feature branches, and maintainable repositories that document engineering decisions alongside source code."
+  },
+
+  // Deep Learning & Machine Learning
+  {
+    name: "PyTorch",
+    category: "Deep Learning",
+    proficiency: 88,
+    level: "Advanced",
+    iconName: "Zap",
+    yearsExperience: "2024 - Present",
+    description: "I use PyTorch for implementing and experimenting with neural networks, leveraging its dynamic computation graph to better understand model behavior, optimization, and deep learning workflows."
+  },
+  {
+    name: "TensorFlow",
+    category: "Deep Learning",
+    proficiency: 83,
+    level: "Proficient",
+    iconName: "Binary",
+    yearsExperience: "2024 - Present",
+    description: "I use TensorFlow to build and train neural networks while developing a first-principles understanding of deep learning architectures, optimization, and model evaluation."
+  },
+  {
+    name: "Keras",
+    category: "Deep Learning",
+    proficiency: 84,
+    level: "Proficient",
+    iconName: "Zap",
+    yearsExperience: "2024 - Present",
+    description: "I use Keras to rapidly prototype deep learning models through a high-level API, allowing experimentation with network architectures while maintaining readable and maintainable training pipelines."
+  },
+  {
+    name: "Machine Learning",
+    category: "Machine Learning",
+    proficiency: 89,
+    level: "Advanced",
+    iconName: "Cpu",
+    yearsExperience: "2024 - Present",
+    description: "I apply supervised learning techniques to develop predictive models, evaluate performance, and understand the trade-offs between data quality, feature engineering, model complexity, and generalization."
+  }
 ];
 
 export const TIMELINE_DATA: TimelineItem[] = [
   {
-    id: "t1",
-    year: "2025 - Present",
-    title: "Lead AI Systems Architect",
-    organization: "Cognitive Scale AI (San Francisco, CA)",
-    type: "Career",
-    description: "Heading the Core AI Infrastructure team. Built enterprise multi-agent RAG engines serving 18M+ daily LLM tokens with 99.9% uptime SLA.",
-    impact: "Reduced infrastructure inference costs by 45% while boosting search hit-rate to 95.6%.",
-    skillsUsed: ["LangGraph", "vLLM", "Qdrant", "PyTorch", "FastAPI", "Kubernetes"]
-  },
-  {
-    id: "t2",
+    id: "timeline-2024",
     year: "2024",
-    title: "Winner - Global AI Agents Hackathon",
-    organization: "NVIDIA & Anthropic Hackathon",
-    type: "Hackathon",
-    description: "Designed 'AgenticSwarm', an autonomous software debugging agent using MCP protocol and sandboxed runtime execution.",
-    impact: "Awarded 1st Place out of 1,200+ global teams and $50k GPU computing credits.",
-    skillsUsed: ["MCP Protocol", "LangGraph", "Docker Sandbox", "Llama-3"]
-  },
-  {
-    id: "t3",
-    year: "2023 - 2024",
-    title: "Senior Machine Learning Engineer",
-    organization: "Aether Vision Labs",
+    title: "Foundations & Self-Taught Exploration",
+    organization: "Independent Learning",
     type: "Career",
-    description: "Designed sub-10ms industrial defect detection pipelines using YOLOv8, C++ CUDA, and NVIDIA Jetson edge devices.",
-    impact: "Deployed to 14 semiconductor assembly lines, preventing $2.4M in manufacturing scrap.",
-    skillsUsed: ["YOLOv8", "TensorRT", "CUDA C++", "OpenCV", "DeepStream"]
+    description: "Started teaching myself Python and programming fundamentals in February 2024. Began exploring artificial intelligence and machine learning independently.",
+    impact: "Built foundational expertise across Python programming, core data structures, algorithms, and AI fundamentals.",
+    skillsUsed: ["Python Programming", "AI Fundamentals", "Machine Learning Basics", "Git"]
   },
   {
-    id: "t4",
-    year: "2022 - 2023",
-    title: "AI Research Fellow",
-    organization: "Stanford AI Lab / Independent Research",
-    type: "Research",
-    description: "Published research on context compression techniques for retrieval-augmented generative systems.",
-    impact: "Published paper cited in 80+ AI engineering repositories.",
-    skillsUsed: ["PyTorch", "Transformers", "Information Retrieval", "BGE Embeddings"]
+    id: "timeline-2025",
+    year: "2025",
+    title: "Build & Validate — Product Development & MVPs",
+    organization: "AethraSync & CogniMerse",
+    type: "Achievement",
+    description: "Moved from learning concepts to applying them. Founded and experimented with AethraSync and CogniMerse, building early products and testing assumptions through MVP development, customer discovery, and direct market feedback.",
+    impact: "Validated product hypotheses directly with users, iterated through rapid MVP cycles, and established customer discovery feedback loops.",
+    skillsUsed: ["Product Development", "Entrepreneurship", "Customer Discovery", "MVPs", "Full-Stack Prototyping"]
+  },
+  {
+    id: "timeline-2026",
+    year: "2026",
+    title: "AI Engineering & Agentic Infrastructure",
+    organization: "Applied AI Systems",
+    type: "Career",
+    description: "Shifted deeper into applied AI engineering and began building increasingly sophisticated systems around LLMs, RAG, embeddings, agentic workflows, and backend infrastructure.",
+    impact: "Engineered robust multi-agent graphs, hybrid retrieval pipelines, and high-throughput async backend services.",
+    skillsUsed: ["RAG", "Agentic AI", "LangGraph", "FastAPI", "Vector Search", "LLM Systems"]
+  },
+  {
+    id: "timeline-now",
+    year: "NOW (Present)",
+    title: "Production-Grade AI Systems & Architecture",
+    organization: "AI Architecture & Engineering",
+    type: "Career",
+    description: "Building toward production-grade AI engineering, with increasing emphasis on architecture, evaluation, reliability, cost, and deployment.",
+    impact: "Designing deterministic LLM workflows, benchmarking retrieval hit-rates, and optimizing latency and token expenditure for production scale.",
+    skillsUsed: ["System Design", "Evaluation", "Reliability", "Optimization", "Docker", "PostgreSQL"]
   }
 ];
 

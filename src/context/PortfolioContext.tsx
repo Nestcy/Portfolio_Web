@@ -141,7 +141,9 @@ const STORAGE_KEYS = {
   PASSCODE_SALT: 'nestcy_passcode_salt_v3',
   SECURITY_SETTINGS: 'nestcy_security_settings_v3',
   AUDIT_LOGS: 'nestcy_audit_logs_v3',
-  AUTH_SESSION: 'nestcy_auth_session_v3'
+  AUTH_SESSION: 'nestcy_auth_session_v3',
+  LAST_UPDATED_AT: 'nestcy_last_updated_at_v3',
+  EMERGENCY_BACKUP: 'nestcy_emergency_backup_v3'
 };
 
 interface PortfolioContextType {
@@ -162,6 +164,8 @@ interface PortfolioContextType {
   lastCloudSyncTime: string | null;
   forceSyncToCloud: () => Promise<boolean>;
   forcePullFromCloud: () => Promise<boolean>;
+  hasEmergencyBackup: boolean;
+  restoreEmergencyBackup: () => boolean;
 
   // Projects CRUD & Upload
   addProject: (project: Project) => void;
@@ -297,6 +301,13 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Cloud Sync State
   const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('synced');
   const [lastCloudSyncTime, setLastCloudSyncTime] = useState<string | null>(null);
+  const [hasEmergencyBackup, setHasEmergencyBackup] = useState<boolean>(() => {
+    try {
+      return Boolean(localStorage.getItem(STORAGE_KEYS.EMERGENCY_BACKUP));
+    } catch {
+      return false;
+    }
+  });
   const isInitialCloudLoadDone = useRef<boolean>(false);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -366,6 +377,16 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setAuditLogs(prev => [newEntry, ...prev.slice(0, 99)]); // Keep last 100 entries
   }, []);
 
+  // Record timestamp & update emergency backup whenever data changes
+  const markLocalUpdate = useCallback(() => {
+    const nowIso = new Date().toISOString();
+    try {
+      localStorage.setItem(STORAGE_KEYS.LAST_UPDATED_AT, nowIso);
+    } catch (e) {
+      console.warn('Failed to write last updated timestamp', e);
+    }
+  }, []);
+
   // Sync to local storage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
@@ -403,10 +424,31 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
   }, [auditLogs]);
 
+  // Keep a persistent emergency backup
+  useEffect(() => {
+    try {
+      const backupPayload = {
+        savedAt: new Date().toISOString(),
+        personalInfo,
+        projects,
+        workExperience,
+        education,
+        skills,
+        certifications,
+        timeline
+      };
+      localStorage.setItem(STORAGE_KEYS.EMERGENCY_BACKUP, JSON.stringify(backupPayload));
+      setHasEmergencyBackup(true);
+    } catch (e) {
+      console.warn('Emergency backup write error', e);
+    }
+  }, [personalInfo, projects, workExperience, education, skills, certifications, timeline]);
+
   // Push full payload to Firestore
   const forceSyncToCloud = useCallback(async (): Promise<boolean> => {
     setCloudSyncStatus('syncing');
     try {
+      const nowIso = new Date().toISOString();
       const docRef = doc(db, PORTFOLIO_DOC_PATH.collection, PORTFOLIO_DOC_PATH.id);
       const payload = {
         personalInfo,
@@ -416,9 +458,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         skills,
         certifications,
         timeline,
-        updatedAt: new Date().toISOString()
+        updatedAt: nowIso
       };
       await setDoc(docRef, payload, { merge: true });
+      localStorage.setItem(STORAGE_KEYS.LAST_UPDATED_AT, nowIso);
       setCloudSyncStatus('synced');
       setLastCloudSyncTime(new Date().toLocaleTimeString());
       addAuditLog('CLOUD_SYNC_SUCCESS', 'SUCCESS', 'Synchronized live portfolio data to Firebase Firestore.');
@@ -446,6 +489,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (data.skills) setSkills(data.skills);
         if (data.certifications) setCertifications(data.certifications);
         if (data.timeline) setTimeline(data.timeline);
+        if (data.updatedAt) {
+          localStorage.setItem(STORAGE_KEYS.LAST_UPDATED_AT, data.updatedAt);
+        }
         setCloudSyncStatus('synced');
         setLastCloudSyncTime(new Date().toLocaleTimeString());
         addAuditLog('CLOUD_PULL_SUCCESS', 'SUCCESS', 'Pulled fresh live state from Firebase Firestore.');
@@ -459,7 +505,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [addAuditLog]);
 
-  // Initialize Firestore on mount and subscribe to live changes
+  // Initialize Firestore on mount with smart timestamp reconciliation (Anti-Overwrite Protection)
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     const initFirestore = async () => {
@@ -468,52 +514,86 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const docRef = doc(db, PORTFOLIO_DOC_PATH.collection, PORTFOLIO_DOC_PATH.id);
         const docSnap = await getDoc(docRef);
 
+        const localUpdatedStr = localStorage.getItem(STORAGE_KEYS.LAST_UPDATED_AT);
+        const localUpdateTime = localUpdatedStr ? new Date(localUpdatedStr).getTime() : 0;
+
         if (docSnap.exists()) {
           const cloudData = docSnap.data();
-          // Check if cloud data contains stale legacy mock names (e.g. 'Alex Rivera') or valid user data
+          const cloudUpdateTime = cloudData.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
           const isStaleData = cloudData.personalInfo && (cloudData.personalInfo.name === 'Alex Rivera' || cloudData.personalInfo.email === 'alex.rivera@ai-arch.dev');
           
-          if (!isStaleData) {
+          const hasLegacyMockTimeline = cloudData.timeline && Array.isArray(cloudData.timeline) && cloudData.timeline.some((t: any) => t.id === 't1' || t.organization === 'Cognitive Scale AI (San Francisco, CA)');
+          const hasLegacyMockSkills = cloudData.skills && Array.isArray(cloudData.skills) && cloudData.skills.some((s: any) => s.name === 'LLM Fine-Tuning (LoRA / QLoRA)' || s.name === 'Segment Anything (SAM) & OpenCV');
+
+          // ANTI-OVERWRITE RULE:
+          // If local storage has edits newer than or equal to cloud state, PRESERVE local storage and upload to cloud!
+          // Only pull down cloud data if cloud data is strictly newer than local state.
+          if (!isStaleData && cloudUpdateTime > localUpdateTime && localUpdateTime === 0) {
+            // First time loading on a clean device with existing cloud data
             if (cloudData.personalInfo) setPersonalInfo(cloudData.personalInfo);
             if (cloudData.projects && Array.isArray(cloudData.projects)) setProjects(cloudData.projects);
             if (cloudData.workExperience && Array.isArray(cloudData.workExperience)) setWorkExperience(cloudData.workExperience);
             if (cloudData.education && Array.isArray(cloudData.education)) setEducation(cloudData.education);
-            if (cloudData.skills && Array.isArray(cloudData.skills)) setSkills(cloudData.skills);
+            if (cloudData.skills && Array.isArray(cloudData.skills) && !hasLegacyMockSkills) {
+              setSkills(cloudData.skills);
+            } else {
+              setSkills(INITIAL_SKILLS_DATA);
+            }
             if (cloudData.certifications && Array.isArray(cloudData.certifications)) setCertifications(cloudData.certifications);
-            if (cloudData.timeline && Array.isArray(cloudData.timeline)) setTimeline(cloudData.timeline);
-          } else {
-            // Overwrite stale legacy mock data with clean Nestcy default data in cloud
-            const cleanPayload = {
-              personalInfo: INITIAL_PERSONAL_INFO,
-              projects: INITIAL_PROJECTS_DATA,
-              workExperience: INITIAL_WORK_EXPERIENCE,
-              education: INITIAL_EDUCATION,
-              skills: INITIAL_SKILLS_DATA,
-              certifications: INITIAL_CERTIFICATIONS_DATA,
-              timeline: INITIAL_TIMELINE_DATA,
-              updatedAt: new Date().toISOString()
+            if (cloudData.timeline && Array.isArray(cloudData.timeline) && !hasLegacyMockTimeline) {
+              setTimeline(cloudData.timeline);
+            } else {
+              setTimeline(INITIAL_TIMELINE_DATA);
+            }
+            if (cloudData.updatedAt) localStorage.setItem(STORAGE_KEYS.LAST_UPDATED_AT, cloudData.updatedAt);
+          } else if (localUpdateTime >= cloudUpdateTime && localUpdateTime > 0) {
+            // Local edits are more recent or equal -> push local edits to cloud to make sure cloud is up to date
+            const effectiveTimeline = hasLegacyMockTimeline ? INITIAL_TIMELINE_DATA : timeline;
+            const effectiveSkills = hasLegacyMockSkills ? INITIAL_SKILLS_DATA : skills;
+            if (hasLegacyMockTimeline) setTimeline(INITIAL_TIMELINE_DATA);
+            if (hasLegacyMockSkills) setSkills(INITIAL_SKILLS_DATA);
+
+            const syncPayload = {
+              personalInfo,
+              projects,
+              workExperience,
+              education,
+              skills: effectiveSkills,
+              certifications,
+              timeline: effectiveTimeline,
+              updatedAt: localUpdatedStr || new Date().toISOString()
             };
-            await setDoc(docRef, cleanPayload);
-            setPersonalInfo(INITIAL_PERSONAL_INFO);
-            setProjects(INITIAL_PROJECTS_DATA);
-            setWorkExperience(INITIAL_WORK_EXPERIENCE);
-            setEducation(INITIAL_EDUCATION);
-            setSkills(INITIAL_SKILLS_DATA);
-            setCertifications(INITIAL_CERTIFICATIONS_DATA);
-            setTimeline(INITIAL_TIMELINE_DATA);
+            await setDoc(docRef, syncPayload, { merge: true });
+          } else if (!isStaleData && cloudData) {
+            // Load cloud data if local is empty/initial
+            if (cloudData.personalInfo) setPersonalInfo(cloudData.personalInfo);
+            if (cloudData.projects && Array.isArray(cloudData.projects)) setProjects(cloudData.projects);
+            if (cloudData.workExperience && Array.isArray(cloudData.workExperience)) setWorkExperience(cloudData.workExperience);
+            if (cloudData.education && Array.isArray(cloudData.education)) setEducation(cloudData.education);
+            if (cloudData.skills && Array.isArray(cloudData.skills) && !hasLegacyMockSkills) {
+              setSkills(cloudData.skills);
+            } else {
+              setSkills(INITIAL_SKILLS_DATA);
+            }
+            if (cloudData.certifications && Array.isArray(cloudData.certifications)) setCertifications(cloudData.certifications);
+            if (cloudData.timeline && Array.isArray(cloudData.timeline) && !hasLegacyMockTimeline) {
+              setTimeline(cloudData.timeline);
+            } else {
+              setTimeline(INITIAL_TIMELINE_DATA);
+            }
           }
           setCloudSyncStatus('synced');
           setLastCloudSyncTime(new Date().toLocaleTimeString());
         } else {
-          // Document does not exist yet -> bootstrap it with current data
+          // Document does not exist yet in Firestore -> bootstrap with current local data
           const initialPayload = {
-            personalInfo: INITIAL_PERSONAL_INFO,
-            projects: INITIAL_PROJECTS_DATA,
-            workExperience: INITIAL_WORK_EXPERIENCE,
-            education: INITIAL_EDUCATION,
-            skills: INITIAL_SKILLS_DATA,
-            certifications: INITIAL_CERTIFICATIONS_DATA,
-            timeline: INITIAL_TIMELINE_DATA,
+            personalInfo,
+            projects,
+            workExperience,
+            education,
+            skills,
+            certifications,
+            timeline,
             updatedAt: new Date().toISOString()
           };
           await setDoc(docRef, initialPayload);
@@ -549,7 +629,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, []);
 
-  // Debounced auto-save to Firestore on changes (only after initial load completes)
+  // Rapid auto-save to Firestore on changes (only after initial load completes)
   useEffect(() => {
     if (!isInitialCloudLoadDone.current) return;
 
@@ -558,6 +638,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     syncTimeoutRef.current = setTimeout(async () => {
       try {
         setCloudSyncStatus('syncing');
+        const nowIso = new Date().toISOString();
         const docRef = doc(db, PORTFOLIO_DOC_PATH.collection, PORTFOLIO_DOC_PATH.id);
         const payload = {
           personalInfo,
@@ -567,16 +648,17 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           skills,
           certifications,
           timeline,
-          updatedAt: new Date().toISOString()
+          updatedAt: nowIso
         };
         await setDoc(docRef, payload, { merge: true });
+        localStorage.setItem(STORAGE_KEYS.LAST_UPDATED_AT, nowIso);
         setCloudSyncStatus('synced');
         setLastCloudSyncTime(new Date().toLocaleTimeString());
       } catch (err) {
         console.warn('Background Firestore autosave warning:', err);
         setCloudSyncStatus('offline');
       }
-    }, 1200);
+    }, 400);
 
     return () => {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
@@ -762,21 +844,25 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Project operations
   const addProject = (project: Project) => {
+    markLocalUpdate();
     setProjects(prev => [project, ...prev]);
     addAuditLog('PROJECT_CREATED', 'SUCCESS', `Created project: "${project.title}" [${project.id}]`);
   };
 
   const updateProject = (id: string, updated: Partial<Project>) => {
+    markLocalUpdate();
     setProjects(prev => prev.map(p => (p.id === id ? { ...p, ...updated } : p)));
     addAuditLog('PROJECT_UPDATED', 'INFO', `Updated project properties for ID: ${id}`);
   };
 
   const deleteProject = (id: string) => {
+    markLocalUpdate();
     setProjects(prev => prev.filter(p => p.id !== id));
     addAuditLog('PROJECT_DELETED', 'WARNING', `Deleted project with ID: ${id}`);
   };
 
   const importProjects = (projectsList: Project[]) => {
+    markLocalUpdate();
     setProjects(prev => {
       const existingIds = new Set(prev.map(p => p.id));
       const newProjects = projectsList.filter(p => !existingIds.has(p.id));
@@ -787,86 +873,124 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Personal Info & CV operations
   const updatePersonalInfo = (info: Partial<PersonalInfoType>) => {
+    markLocalUpdate();
     setPersonalInfo(prev => ({ ...prev, ...info }));
     addAuditLog('CV_INFO_UPDATED', 'INFO', 'Updated primary personal info & coordinates.');
   };
 
   const addWorkExperience = (item: WorkExperienceItem) => {
+    markLocalUpdate();
     setWorkExperience(prev => [item, ...prev]);
     addAuditLog('EXPERIENCE_ADDED', 'SUCCESS', `Added career milestone: ${item.role} @ ${item.company}`);
   };
 
   const updateWorkExperience = (id: string, updated: Partial<WorkExperienceItem>) => {
+    markLocalUpdate();
     setWorkExperience(prev => prev.map(e => (e.id === id ? { ...e, ...updated } : e)));
     addAuditLog('EXPERIENCE_UPDATED', 'INFO', `Updated work experience item ID: ${id}`);
   };
 
   const deleteWorkExperience = (id: string) => {
+    markLocalUpdate();
     setWorkExperience(prev => prev.filter(e => e.id !== id));
     addAuditLog('EXPERIENCE_DELETED', 'WARNING', `Removed work experience item ID: ${id}`);
   };
 
   const addEducation = (item: EducationItem) => {
+    markLocalUpdate();
     setEducation(prev => [...prev, item]);
     addAuditLog('EDUCATION_ADDED', 'SUCCESS', `Added academic degree: ${item.degree}`);
   };
 
   const updateEducation = (id: string, updated: Partial<EducationItem>) => {
+    markLocalUpdate();
     setEducation(prev => prev.map(e => (e.id === id ? { ...e, ...updated } : e)));
     addAuditLog('EDUCATION_UPDATED', 'INFO', `Updated education item ID: ${id}`);
   };
 
   const deleteEducation = (id: string) => {
+    markLocalUpdate();
     setEducation(prev => prev.filter(e => e.id !== id));
     addAuditLog('EDUCATION_DELETED', 'WARNING', `Removed education item ID: ${id}`);
   };
 
   // Skills
   const addSkill = (skill: SkillItem) => {
+    markLocalUpdate();
     setSkills(prev => [...prev, skill]);
     addAuditLog('SKILL_ADDED', 'SUCCESS', `Added skill: ${skill.name} (${skill.category})`);
   };
 
   const updateSkill = (name: string, updated: Partial<SkillItem>) => {
+    markLocalUpdate();
     setSkills(prev => prev.map(s => (s.name === name ? { ...s, ...updated } : s)));
     addAuditLog('SKILL_UPDATED', 'INFO', `Updated proficiency for skill: ${name}`);
   };
 
   const deleteSkill = (name: string) => {
+    markLocalUpdate();
     setSkills(prev => prev.filter(s => s.name !== name));
     addAuditLog('SKILL_DELETED', 'WARNING', `Deleted skill: ${name}`);
   };
 
   // Certifications
   const addCertification = (cert: Certification) => {
+    markLocalUpdate();
     setCertifications(prev => [cert, ...prev]);
     addAuditLog('CERTIFICATION_ADDED', 'SUCCESS', `Added certification: ${cert.title}`);
   };
 
   const updateCertification = (id: string, updated: Partial<Certification>) => {
+    markLocalUpdate();
     setCertifications(prev => prev.map(c => (c.id === id ? { ...c, ...updated } : c)));
     addAuditLog('CERTIFICATION_UPDATED', 'INFO', `Updated certification ID: ${id}`);
   };
 
   const deleteCertification = (id: string) => {
+    markLocalUpdate();
     setCertifications(prev => prev.filter(c => c.id !== id));
     addAuditLog('CERTIFICATION_DELETED', 'WARNING', `Deleted certification ID: ${id}`);
   };
 
   // Timeline
   const addTimelineItem = (item: TimelineItem) => {
+    markLocalUpdate();
     setTimeline(prev => [item, ...prev]);
     addAuditLog('TIMELINE_ITEM_ADDED', 'SUCCESS', `Added timeline event: ${item.title} (${item.year})`);
   };
 
   const updateTimelineItem = (id: string, updated: Partial<TimelineItem>) => {
+    markLocalUpdate();
     setTimeline(prev => prev.map(t => (t.id === id ? { ...t, ...updated } : t)));
     addAuditLog('TIMELINE_ITEM_UPDATED', 'INFO', `Updated timeline entry ID: ${id}`);
   };
 
   const deleteTimelineItem = (id: string) => {
+    markLocalUpdate();
     setTimeline(prev => prev.filter(t => t.id !== id));
     addAuditLog('TIMELINE_ITEM_DELETED', 'WARNING', `Deleted timeline entry ID: ${id}`);
+  };
+
+  // Emergency Backup Restore
+  const restoreEmergencyBackup = (): boolean => {
+    try {
+      const backupStr = localStorage.getItem(STORAGE_KEYS.EMERGENCY_BACKUP);
+      if (!backupStr) return false;
+      const data = JSON.parse(backupStr);
+      if (data.personalInfo) setPersonalInfo(data.personalInfo);
+      if (data.projects && Array.isArray(data.projects)) setProjects(data.projects);
+      if (data.workExperience && Array.isArray(data.workExperience)) setWorkExperience(data.workExperience);
+      if (data.education && Array.isArray(data.education)) setEducation(data.education);
+      if (data.skills && Array.isArray(data.skills)) setSkills(data.skills);
+      if (data.certifications && Array.isArray(data.certifications)) setCertifications(data.certifications);
+      if (data.timeline && Array.isArray(data.timeline)) setTimeline(data.timeline);
+      markLocalUpdate();
+      addAuditLog('EMERGENCY_BACKUP_RESTORED', 'SUCCESS', 'Restored full state from local emergency snapshot.');
+      return true;
+    } catch (e) {
+      console.error('Failed to restore emergency backup:', e);
+      return false;
+    }
   };
 
   // Reset & Backup
@@ -953,6 +1077,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         lastCloudSyncTime,
         forceSyncToCloud,
         forcePullFromCloud,
+        hasEmergencyBackup,
+        restoreEmergencyBackup,
         addProject,
         updateProject,
         deleteProject,

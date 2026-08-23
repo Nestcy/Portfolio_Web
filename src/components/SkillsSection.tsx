@@ -6,7 +6,7 @@ export const SkillsSection: React.FC = () => {
   const { skills } = usePortfolio();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-  const categories = ['All', 'LLMs', 'AI Agents', 'Deep Learning', 'Computer Vision', 'Backend', 'Cloud', 'Databases', 'DevOps'];
+  const categories = ['All', 'AI Agents', 'LLMs', 'Deep Learning', 'Machine Learning', 'Backend', 'Databases', 'DevOps'];
 
   const filteredSkills = skills.filter(skill => 
     selectedCategory === 'All' || skill.category === selectedCategory
