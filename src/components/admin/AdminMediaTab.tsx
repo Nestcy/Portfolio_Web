@@ -71,13 +71,13 @@ export const AdminMediaTab: React.FC = () => {
 
   // Avatar Presets
   const AVATAR_PRESETS = [
-    { label: 'Cyberpunk Engineer', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80' },
+    { label: 'Ernest Zimba (Default Profile)', url: '/src/assets/images/ernest_zimba_profile_1787503261020.jpg' },
     { label: 'AI Researcher', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80' },
     { label: 'Tech Lead', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80' },
     { label: 'System Architect', url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80' }
   ];
 
-  const currentProfileImg = personalInfo.profileImage || personalInfo.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80';
+  const currentProfileImg = personalInfo.profileImage || personalInfo.avatarUrl || '/src/assets/images/ernest_zimba_profile_1787503261020.jpg';
 
   return (
     <div className="space-y-6 font-mono text-xs">

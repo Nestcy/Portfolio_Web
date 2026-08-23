@@ -47,8 +47,9 @@ export const AdminResumeTab: React.FC = () => {
     return `===================================================================
 CURRICULUM VITAE: ${personalInfo.name.toUpperCase()}
 ${personalInfo.title}
-Location: ${personalInfo.location} | Email: ${personalInfo.email}
-GitHub: ${personalInfo.github} | LinkedIn: ${personalInfo.linkedin}
+Address/Location: ${personalInfo.location}
+Primary Email: ${personalInfo.email}${personalInfo.secondaryEmail ? ` | Secondary: ${personalInfo.secondaryEmail}` : ''}
+${personalInfo.phone ? `Phone: ${personalInfo.phone}\n` : ''}LinkedIn: ${personalInfo.linkedin} | GitHub: ${personalInfo.github}
 ===================================================================
 
 EXECUTIVE SUMMARY:
@@ -85,8 +86,9 @@ ${skills.map(s => `${s.name} (${s.level})`).join(', ')}
   const handleDownloadMarkdown = () => {
     const md = `# ${personalInfo.name}
 **${personalInfo.title}**  
-*${personalInfo.location} | ${personalInfo.email}*  
-[GitHub](${personalInfo.github}) | [LinkedIn](${personalInfo.linkedin})
+*${personalInfo.location}*  
+*Email: ${personalInfo.email}${personalInfo.secondaryEmail ? ` | Alt: ${personalInfo.secondaryEmail}` : ''}${personalInfo.phone ? ` | Phone: ${personalInfo.phone}` : ''}*  
+[LinkedIn](${personalInfo.linkedin}) | [GitHub](${personalInfo.github})
 
 ---
 
@@ -178,7 +180,7 @@ ${certifications.map(c => `- **${c.title}** — ${c.institution} (\`${c.issueDat
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <img
-                    src={personalInfo.profileImage || personalInfo.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'}
+                    src={personalInfo.profileImage || personalInfo.avatarUrl || '/src/assets/images/ernest_zimba_profile_1787503261020.jpg'}
                     alt="Profile Avatar"
                     className="w-16 h-16 object-cover border-2 border-[#ff4d00] shrink-0"
                   />
@@ -253,24 +255,57 @@ ${certifications.map(c => `- **${c.title}** — ${c.institution} (\`${c.issueDat
                 </div>
 
                 <div>
-                  <span className="label-tag">COMMS_CHANNEL</span>
+                  <span className="label-tag">PRIMARY_EMAIL</span>
                   <input
                     type="email"
                     value={personalInfo.email}
                     onChange={(e) => updatePersonalInfo({ email: e.target.value })}
                     className="tactical-input text-[#ff4d00]"
+                    placeholder="nyt4146@gmail.com"
+                  />
+                </div>
+
+                <div>
+                  <span className="label-tag">SECONDARY_EMAIL</span>
+                  <input
+                    type="email"
+                    value={personalInfo.secondaryEmail || ''}
+                    onChange={(e) => updatePersonalInfo({ secondaryEmail: e.target.value })}
+                    className="tactical-input text-zinc-300"
                     placeholder="nestcy770@gmail.com"
                   />
                 </div>
 
                 <div>
-                  <span className="label-tag">LOC_SECTOR</span>
+                  <span className="label-tag">PHONE_TEL</span>
+                  <input
+                    type="tel"
+                    value={personalInfo.phone || ''}
+                    onChange={(e) => updatePersonalInfo({ phone: e.target.value })}
+                    className="tactical-input text-zinc-300"
+                    placeholder="+260973732409"
+                  />
+                </div>
+
+                <div>
+                  <span className="label-tag">LOC_SECTOR / ADDRESS</span>
                   <input
                     type="text"
                     value={personalInfo.location}
                     onChange={(e) => updatePersonalInfo({ location: e.target.value })}
                     className="tactical-input"
-                    placeholder="San Francisco, CA"
+                    placeholder="15833/1080 Kamwala South, Lusaka, Zambia"
+                  />
+                </div>
+
+                <div>
+                  <span className="label-tag">BIRTHDAY / DOB</span>
+                  <input
+                    type="text"
+                    value={personalInfo.birthday || ''}
+                    onChange={(e) => updatePersonalInfo({ birthday: e.target.value })}
+                    className="tactical-input"
+                    placeholder="July 30, 2006"
                   />
                 </div>
               </div>

@@ -164,7 +164,7 @@ export const Hero: React.FC<HeroProps> = ({ onViewProjects, onOpenResume }) => {
 
             <div className="relative group overflow-hidden border border-[#ff4d00]/50 mb-3">
               <img
-                src={personalInfo.profileImage || personalInfo.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'}
+                src={personalInfo.profileImage || personalInfo.avatarUrl || '/src/assets/images/ernest_zimba_profile_1787503261020.jpg'}
                 alt={personalInfo.name}
                 className="w-full h-48 sm:h-52 object-cover transition-transform duration-500 group-hover:scale-105"
               />

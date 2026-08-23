@@ -50,7 +50,10 @@ export interface PersonalInfoType {
   title: string;
   handle: string;
   email: string;
+  secondaryEmail?: string;
+  phone?: string;
   location: string;
+  birthday?: string;
   bio: string;
   availability: string;
   github: string;
@@ -236,7 +239,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             if (p.id === 'marketing-agent') {
               return {
                 ...p,
-                liveDemoUrl: 'https://market-chat-ten.vercel.app/'
+                liveDemoUrl: 'https://market-chat.onrender.com/'
               };
             }
             return p;
@@ -252,7 +255,21 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [personalInfo, setPersonalInfo] = useState<PersonalInfoType>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.PERSONAL_INFO);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.name === 'Alex Rivera' || parsed.email === 'alex.rivera@ai-arch.dev' || parsed.name === 'Nestcy' || parsed.linkedin === 'https://linkedin.com/in/nestcy' || !parsed.profileImage || parsed.profileImage.includes('photo-1534528741775-53994a69daeb')) {
+          return {
+            ...INITIAL_PERSONAL_INFO,
+            ...parsed,
+            profileImage: (!parsed.profileImage || parsed.profileImage.includes('photo-1534528741775-53994a69daeb')) ? INITIAL_PERSONAL_INFO.profileImage : parsed.profileImage,
+            avatarUrl: (!parsed.avatarUrl || parsed.avatarUrl.includes('photo-1534528741775-53994a69daeb')) ? INITIAL_PERSONAL_INFO.avatarUrl : parsed.avatarUrl,
+          };
+        }
+        return {
+          ...INITIAL_PERSONAL_INFO,
+          ...parsed
+        };
+      }
     } catch (e) {
       console.warn('Failed to parse saved personal info', e);
     }
@@ -535,7 +552,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (docSnap.exists()) {
           const cloudData = docSnap.data();
           const cloudUpdateTime = cloudData.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
-          const isStaleData = cloudData.personalInfo && (cloudData.personalInfo.name === 'Alex Rivera' || cloudData.personalInfo.email === 'alex.rivera@ai-arch.dev');
+          const isStaleData = cloudData.personalInfo && (
+            cloudData.personalInfo.name === 'Alex Rivera' || 
+            cloudData.personalInfo.email === 'alex.rivera@ai-arch.dev' || 
+            cloudData.personalInfo.name === 'Nestcy' || 
+            cloudData.personalInfo.linkedin === 'https://linkedin.com/in/nestcy'
+          );
           
           const hasLegacyMockTimeline = cloudData.timeline && Array.isArray(cloudData.timeline) && cloudData.timeline.some((t: any) => t.id === 't1' || t.organization === 'Cognitive Scale AI (San Francisco, CA)');
           const hasLegacyMockSkills = cloudData.skills && Array.isArray(cloudData.skills) && cloudData.skills.some((s: any) => s.name === 'LLM Fine-Tuning (LoRA / QLoRA)' || s.name === 'Segment Anything (SAM) & OpenCV');
@@ -548,7 +570,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               if (p.id === 'marketing-agent') {
                 return {
                   ...p,
-                  liveDemoUrl: 'https://market-chat-ten.vercel.app/',
+                  liveDemoUrl: 'https://market-chat.onrender.com/',
                   coverImage: (!p.coverImage || p.coverImage.includes('unsplash.com/photo-1460925895917')) ? INITIAL_PROJECTS_DATA[0].coverImage : p.coverImage,
                   gallery: (!p.gallery || p.gallery.some((g: string) => g.includes('unsplash.com/photo-1460925895917'))) ? INITIAL_PROJECTS_DATA[0].gallery : p.gallery
                 };
@@ -562,7 +584,14 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           // Only pull down cloud data if cloud data is strictly newer than local state.
           if (!isStaleData && cloudUpdateTime > localUpdateTime && localUpdateTime === 0) {
             // First time loading on a clean device with existing cloud data
-            if (cloudData.personalInfo) setPersonalInfo(cloudData.personalInfo);
+            if (cloudData.personalInfo) {
+              setPersonalInfo({
+                ...INITIAL_PERSONAL_INFO,
+                ...cloudData.personalInfo,
+                profileImage: (!cloudData.personalInfo.profileImage || cloudData.personalInfo.profileImage.includes('photo-1534528741775-53994a69daeb')) ? INITIAL_PERSONAL_INFO.profileImage : cloudData.personalInfo.profileImage,
+                avatarUrl: (!cloudData.personalInfo.avatarUrl || cloudData.personalInfo.avatarUrl.includes('photo-1534528741775-53994a69daeb')) ? INITIAL_PERSONAL_INFO.avatarUrl : cloudData.personalInfo.avatarUrl,
+              });
+            }
             if (cloudData.projects) setProjects(sanitizeProjects(cloudData.projects));
             if (cloudData.workExperience && Array.isArray(cloudData.workExperience)) setWorkExperience(cloudData.workExperience);
             if (cloudData.education && Array.isArray(cloudData.education) && !hasLegacyMockEducation) {

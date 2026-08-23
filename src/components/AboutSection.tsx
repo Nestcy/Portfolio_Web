@@ -29,7 +29,7 @@ export const AboutSection: React.FC = () => {
           <div className="lg:col-span-5 space-y-4 font-mono">
             <div className="relative rounded-xl overflow-hidden border border-zinc-800 p-1.5 bg-[#030303] group">
               <img
-                src={personalInfo.profileImage || personalInfo.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"}
+                src={personalInfo.profileImage || personalInfo.avatarUrl || "/src/assets/images/ernest_zimba_profile_1787503261020.jpg"}
                 alt={personalInfo.name}
                 className="w-full h-80 object-cover rounded group-hover:scale-105 transition-transform duration-300 opacity-90"
               />

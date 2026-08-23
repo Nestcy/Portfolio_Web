@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Logo & Node Status */}
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => handleNavClick('hero')}>
             <img
-              src={personalInfo.profileImage || personalInfo.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'}
+              src={personalInfo.profileImage || personalInfo.avatarUrl || '/src/assets/images/ernest_zimba_profile_1787503261020.jpg'}
               alt={personalInfo.name}
               className="w-7 h-7 object-cover border border-[#ff4d00] shadow-sm"
             />

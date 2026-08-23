@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Linkedin, Github, Twitter, MapPin, FileText, Send, CheckCircle2, Sparkles, MessageSquare } from 'lucide-react';
+import { Mail, Linkedin, Github, Twitter, MapPin, FileText, Phone, Send, CheckCircle2, Sparkles, MessageSquare } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext';
 import confetti from 'canvas-confetti';
 
@@ -76,9 +76,23 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onOpenResume }) 
 
               <div className="space-y-2.5 text-xs text-zinc-300">
                 <a href={`mailto:${personalInfo.email}`} className="flex items-center space-x-2.5 p-2.5 rounded bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors">
-                  <Mail className="w-4 h-4 text-zinc-400 shrink-0" />
+                  <Mail className="w-4 h-4 text-[#ff4d00] shrink-0" />
                   <span className="truncate">{personalInfo.email}</span>
                 </a>
+
+                {personalInfo.secondaryEmail && (
+                  <a href={`mailto:${personalInfo.secondaryEmail}`} className="flex items-center space-x-2.5 p-2.5 rounded bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors text-zinc-400">
+                    <Mail className="w-4 h-4 text-zinc-500 shrink-0" />
+                    <span className="truncate">{personalInfo.secondaryEmail}</span>
+                  </a>
+                )}
+
+                {personalInfo.phone && (
+                  <a href={`tel:${personalInfo.phone}`} className="flex items-center space-x-2.5 p-2.5 rounded bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors">
+                    <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{personalInfo.phone}</span>
+                  </a>
+                )}
 
                 <div className="flex items-center space-x-2.5 p-2.5 rounded bg-zinc-950 border border-zinc-800">
                   <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />

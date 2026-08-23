@@ -159,7 +159,8 @@ ${skills.map(s => s.name).join(', ')}
                   <div style="color: #6b7280; font-size: 11px;">${personalInfo.location}</div>
                 </div>
                 <div class="contact">
-                  <div>Email: ${personalInfo.email}</div>
+                  <div>Email: ${personalInfo.email}${personalInfo.secondaryEmail ? ` | ${personalInfo.secondaryEmail}` : ''}</div>
+                  ${personalInfo.phone ? `<div>Phone: ${personalInfo.phone}</div>` : ''}
                   <div>GitHub: ${personalInfo.github}</div>
                   <div>LinkedIn: ${personalInfo.linkedin}</div>
                 </div>
@@ -289,7 +290,11 @@ ${skills.map(s => s.name).join(', ')}
 <body>
   <h1>${personalInfo.name}</h1>
   <div class="title">${personalInfo.title} | ${personalInfo.location}</div>
-  <div class="contact">Email: ${personalInfo.email} | GitHub: ${personalInfo.github} | LinkedIn: ${personalInfo.linkedin}</div>
+  <div class="contact">
+    Email: ${personalInfo.email}${personalInfo.secondaryEmail ? ` | ${personalInfo.secondaryEmail}` : ''}
+    ${personalInfo.phone ? ` | Phone: ${personalInfo.phone}` : ''}
+    | GitHub: ${personalInfo.github} | LinkedIn: ${personalInfo.linkedin}
+  </div>
   
   <div class="section-title">Executive Summary</div>
   <p>${personalInfo.bio}</p>
@@ -414,7 +419,7 @@ ${skills.map(s => s.name).join(', ')}
           <div className="border-b border-[#2a2826] pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
               <img
-                src={personalInfo.profileImage || personalInfo.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'}
+                src={personalInfo.profileImage || personalInfo.avatarUrl || '/src/assets/images/ernest_zimba_profile_1787503261020.jpg'}
                 alt={personalInfo.name}
                 className="w-16 h-16 object-cover border-2 border-[#ff4d00] shrink-0"
               />
@@ -427,6 +432,8 @@ ${skills.map(s => s.name).join(', ')}
 
             <div className="space-y-0.5 text-right font-mono text-zinc-400 text-[11px]">
               <div>Email: {personalInfo.email}</div>
+              {personalInfo.secondaryEmail && <div>Alt: {personalInfo.secondaryEmail}</div>}
+              {personalInfo.phone && <div>Phone: {personalInfo.phone}</div>}
               <div>GitHub: {personalInfo.github}</div>
               <div>LinkedIn: {personalInfo.linkedin}</div>
             </div>
