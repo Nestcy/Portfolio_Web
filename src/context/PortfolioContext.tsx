@@ -105,18 +105,18 @@ const INITIAL_WORK_EXPERIENCE: WorkExperienceItem[] = [
 
 const INITIAL_EDUCATION: EducationItem[] = [
   {
-    id: 'edu-1',
-    degree: 'M.S. in Computer Science (Artificial Intelligence Track)',
-    institution: 'Stanford University',
-    year: '2021 - 2023',
-    details: 'Focus on Distributed Machine Learning Systems, Neural GPU Compilers, and Attention Mechanisms.'
+    id: 'edu-ibm-rag-agentic',
+    degree: 'IBM RAG and Agentic AI (Professional Certificate)',
+    institution: 'IBM / Coursera',
+    year: '2026',
+    details: '8-Course specialization: LangGraph, LangChain, Multi-Agent Swarms (CrewAI/AutoGen/BeeAI), Vector Databases, Multimodal GenAI.'
   },
   {
-    id: 'edu-2',
-    degree: 'B.S. in Computer Engineering & Mathematics',
-    institution: 'UC Berkeley',
-    year: '2017 - 2021',
-    details: 'Graduated Magna Cum Laude. Undergraduate research in high-performance computing & parallel algorithms.'
+    id: 'edu-ibm-deep-learning',
+    degree: 'IBM Deep Learning with PyTorch, Keras and Tensorflow (Professional Certificate)',
+    institution: 'IBM / Coursera',
+    year: '2026',
+    details: '5-Course specialization: PyTorch, Keras, TensorFlow 2, Convolutional Neural Networks (CNNs), Transformers, and Deep Learning Capstone.'
   }
 ];
 
@@ -227,7 +227,22 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [projects, setProjects] = useState<Project[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.PROJECTS);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Filter out removed projects
+          const filtered = parsed.filter(p => !['rag-nexus-enterprise', 'agentic-swarm-mcp', 'vision-defect-guard', 'vllm-speculative-gateway'].includes(p.id));
+          return (filtered.length > 0 ? filtered : INITIAL_PROJECTS_DATA).map(p => {
+            if (p.id === 'marketing-agent') {
+              return {
+                ...p,
+                liveDemoUrl: 'https://market-chat-ten.vercel.app/'
+              };
+            }
+            return p;
+          });
+        }
+      }
     } catch (e) {
       console.warn('Failed to parse saved projects', e);
     }
@@ -524,6 +539,23 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           
           const hasLegacyMockTimeline = cloudData.timeline && Array.isArray(cloudData.timeline) && cloudData.timeline.some((t: any) => t.id === 't1' || t.organization === 'Cognitive Scale AI (San Francisco, CA)');
           const hasLegacyMockSkills = cloudData.skills && Array.isArray(cloudData.skills) && cloudData.skills.some((s: any) => s.name === 'LLM Fine-Tuning (LoRA / QLoRA)' || s.name === 'Segment Anything (SAM) & OpenCV');
+          const hasLegacyMockCertifications = cloudData.certifications && Array.isArray(cloudData.certifications) && cloudData.certifications.some((c: any) => c.id === 'cert-nvidia-llm' || c.id === 'cert-aws-ml' || c.credentialId === 'NV-LLM-892104');
+          const hasLegacyMockEducation = cloudData.education && Array.isArray(cloudData.education) && cloudData.education.some((e: any) => e.id === 'edu-1' || e.institution === 'Stanford University');
+          const sanitizeProjects = (projList: any[]): Project[] => {
+            if (!Array.isArray(projList)) return INITIAL_PROJECTS_DATA;
+            const filtered = projList.filter(p => !['rag-nexus-enterprise', 'agentic-swarm-mcp', 'vision-defect-guard', 'vllm-speculative-gateway'].includes(p?.id));
+            return (filtered.length > 0 ? filtered : INITIAL_PROJECTS_DATA).map(p => {
+              if (p.id === 'marketing-agent') {
+                return {
+                  ...p,
+                  liveDemoUrl: 'https://market-chat-ten.vercel.app/',
+                  coverImage: (!p.coverImage || p.coverImage.includes('unsplash.com/photo-1460925895917')) ? INITIAL_PROJECTS_DATA[0].coverImage : p.coverImage,
+                  gallery: (!p.gallery || p.gallery.some((g: string) => g.includes('unsplash.com/photo-1460925895917'))) ? INITIAL_PROJECTS_DATA[0].gallery : p.gallery
+                };
+              }
+              return p;
+            });
+          };
 
           // ANTI-OVERWRITE RULE:
           // If local storage has edits newer than or equal to cloud state, PRESERVE local storage and upload to cloud!
@@ -531,15 +563,23 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           if (!isStaleData && cloudUpdateTime > localUpdateTime && localUpdateTime === 0) {
             // First time loading on a clean device with existing cloud data
             if (cloudData.personalInfo) setPersonalInfo(cloudData.personalInfo);
-            if (cloudData.projects && Array.isArray(cloudData.projects)) setProjects(cloudData.projects);
+            if (cloudData.projects) setProjects(sanitizeProjects(cloudData.projects));
             if (cloudData.workExperience && Array.isArray(cloudData.workExperience)) setWorkExperience(cloudData.workExperience);
-            if (cloudData.education && Array.isArray(cloudData.education)) setEducation(cloudData.education);
+            if (cloudData.education && Array.isArray(cloudData.education) && !hasLegacyMockEducation) {
+              setEducation(cloudData.education);
+            } else {
+              setEducation(INITIAL_EDUCATION);
+            }
             if (cloudData.skills && Array.isArray(cloudData.skills) && !hasLegacyMockSkills) {
               setSkills(cloudData.skills);
             } else {
               setSkills(INITIAL_SKILLS_DATA);
             }
-            if (cloudData.certifications && Array.isArray(cloudData.certifications)) setCertifications(cloudData.certifications);
+            if (cloudData.certifications && Array.isArray(cloudData.certifications) && !hasLegacyMockCertifications) {
+              setCertifications(cloudData.certifications);
+            } else {
+              setCertifications(INITIAL_CERTIFICATIONS_DATA);
+            }
             if (cloudData.timeline && Array.isArray(cloudData.timeline) && !hasLegacyMockTimeline) {
               setTimeline(cloudData.timeline);
             } else {
@@ -550,16 +590,23 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             // Local edits are more recent or equal -> push local edits to cloud to make sure cloud is up to date
             const effectiveTimeline = hasLegacyMockTimeline ? INITIAL_TIMELINE_DATA : timeline;
             const effectiveSkills = hasLegacyMockSkills ? INITIAL_SKILLS_DATA : skills;
+            const effectiveCerts = hasLegacyMockCertifications ? INITIAL_CERTIFICATIONS_DATA : certifications;
+            const effectiveEdu = hasLegacyMockEducation ? INITIAL_EDUCATION : education;
+            const effectiveProjects = sanitizeProjects(projects);
+
             if (hasLegacyMockTimeline) setTimeline(INITIAL_TIMELINE_DATA);
             if (hasLegacyMockSkills) setSkills(INITIAL_SKILLS_DATA);
+            if (hasLegacyMockCertifications) setCertifications(INITIAL_CERTIFICATIONS_DATA);
+            if (hasLegacyMockEducation) setEducation(INITIAL_EDUCATION);
+            setProjects(effectiveProjects);
 
             const syncPayload = {
               personalInfo,
-              projects,
+              projects: effectiveProjects,
               workExperience,
-              education,
+              education: effectiveEdu,
               skills: effectiveSkills,
-              certifications,
+              certifications: effectiveCerts,
               timeline: effectiveTimeline,
               updatedAt: localUpdatedStr || new Date().toISOString()
             };
@@ -567,15 +614,23 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           } else if (!isStaleData && cloudData) {
             // Load cloud data if local is empty/initial
             if (cloudData.personalInfo) setPersonalInfo(cloudData.personalInfo);
-            if (cloudData.projects && Array.isArray(cloudData.projects)) setProjects(cloudData.projects);
+            if (cloudData.projects) setProjects(sanitizeProjects(cloudData.projects));
             if (cloudData.workExperience && Array.isArray(cloudData.workExperience)) setWorkExperience(cloudData.workExperience);
-            if (cloudData.education && Array.isArray(cloudData.education)) setEducation(cloudData.education);
+            if (cloudData.education && Array.isArray(cloudData.education) && !hasLegacyMockEducation) {
+              setEducation(cloudData.education);
+            } else {
+              setEducation(INITIAL_EDUCATION);
+            }
             if (cloudData.skills && Array.isArray(cloudData.skills) && !hasLegacyMockSkills) {
               setSkills(cloudData.skills);
             } else {
               setSkills(INITIAL_SKILLS_DATA);
             }
-            if (cloudData.certifications && Array.isArray(cloudData.certifications)) setCertifications(cloudData.certifications);
+            if (cloudData.certifications && Array.isArray(cloudData.certifications) && !hasLegacyMockCertifications) {
+              setCertifications(cloudData.certifications);
+            } else {
+              setCertifications(INITIAL_CERTIFICATIONS_DATA);
+            }
             if (cloudData.timeline && Array.isArray(cloudData.timeline) && !hasLegacyMockTimeline) {
               setTimeline(cloudData.timeline);
             } else {

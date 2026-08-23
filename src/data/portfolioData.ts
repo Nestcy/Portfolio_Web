@@ -34,15 +34,15 @@ export const PROJECTS_DATA: Project[] = [
     subtitle: "Businesses need a consistent social content presence but don't have time to plan and write it daily — and fully autonomous posting tools solve that by removing the human from what actually ships.",
     category: "Multi-Agent",
     description: "Small businesses either do their own social content or hand it to a tool that generates and posts autonomously. This middle path AI does the actual planning and writing work, but never publishes anything without explicit human approval at both strategy and post levels.",
-    coverImage: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
+    coverImage: "/src/assets/images/marketing_agent_ui_1787498725335.jpg",
     gallery: [
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
+      "/src/assets/images/marketing_agent_ui_1787498725335.jpg",
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80"
     ],
     technologies: ["Python", "LangGraph", "FastAPI", "Groq (Llama 3.1 / 3.3)", "PostgreSQL", "Celery", "Redis", "Pydantic", "React"],
     featured: true,
     githubUrl: "https://github.com/Nestcy/marketing_agent",
-    liveDemoUrl: "https://chat-ad-architect.lovable.app",
+    liveDemoUrl: "https://market-chat-ten.vercel.app/",
     videoDemoUrl: "",
     metrics: [
       { label: "Approval Gates", value: "2 (Plan & Day)" },
@@ -114,259 +114,6 @@ def plan_gate_node(state: CampaignState):
     futureImprovements: [
       "Support multi-channel output formatting tailored for LinkedIn, Twitter/X, and Instagram carousels.",
       "Add automated engagement analytics tracking back to Postgres to continuously refine campaign preference weights."
-    ]
-  },
-  {
-    id: "rag-nexus-enterprise",
-    title: "RAG-Nexus Enterprise Engine",
-    slug: "rag-nexus-enterprise",
-    subtitle: "Hybrid Dense-Sparse Vector Retrieval & Context Compressor",
-    category: "RAG",
-    description: "Production RAG engine handling 5,000+ internal enterprise PDFs and Slack logs. Features Reciprocal Rank Fusion (RRF), BGE-M3 embeddings, Qdrant cluster quantization, and FlashRank cross-encoder reranking.",
-    coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-    gallery: [
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80"
-    ],
-    technologies: ["FastAPI", "Qdrant", "PyTorch", "BGE-M3", "FlashRank", "Redis", "Docker", "LangChain"],
-    featured: true,
-    githubUrl: "https://github.com/Nestcy/rag-nexus-enterprise",
-    liveDemoUrl: "https://rag-nexus.demo.ai-arch.dev",
-    videoDemoUrl: "https://youtube.com/watch?v=demo_rag_nexus",
-    metrics: [
-      { label: "Search Hit Rate @ 5", value: "95.6%" },
-      { label: "Vector DB Latency", value: "14ms" },
-      { label: "Context Window Saved", value: "68%" },
-      { label: "PDF Processed", value: "120K+" }
-    ],
-    problem: "Enterprise customer documentation had 45,000+ unstructured documents. Standard semantic vector search failed on domain jargon, part numbers, and multi-hop questions while blowing past context token budgets.",
-    solution: "Designed a two-stage hybrid retrieval architecture: BM25 sparse index combined with BGE-M3 dense embeddings via Reciprocal Rank Fusion (RRF k=60), followed by an edge-optimized cross-encoder reranker that prunes context noise by 68%.",
-    architectureDescription: "Ingestion Worker extracts tables & text -> BGE-M3 Embedder -> Qdrant HNSW Index -> BM25 Sparse Index -> Reciprocal Rank Fusion -> Cross-Encoder FlashRank -> LLM Synthesis -> Client streaming websocket.",
-    architectureNodes: [
-      { id: "1", label: "Document Ingestion", type: "client", status: "Active" },
-      { id: "2", label: "BM25 Sparse + BGE-M3 Dense", type: "gateway", status: "Active" },
-      { id: "3", label: "Qdrant Vector Cluster", type: "vector", status: "Active" },
-      { id: "4", label: "FlashRank Cross-Encoder Reranker", type: "cache", status: "Active" },
-      { id: "5", label: "Gemini 2.5 Flash Synthesis", type: "model", status: "Active" }
-    ],
-    technicalChallenges: [
-      {
-        title: "Table & Schema Extraction from Scanned PDF Documents",
-        detail: "Standard pdfplumber missed multi-column tables. Built a custom LayoutLMv3 vision-text pipeline to parse markdown tables before chunking.",
-        metricImpact: "Improved table query recall by 340%"
-      },
-      {
-        title: "High Memory Footprint of Dense HNSW Vector Indices",
-        detail: "Applied 8-bit scalar quantization (SQ) and payload memory indexing in Qdrant.",
-        metricImpact: "Reduced RAM footprint from 64GB down to 14.2GB with <0.3% recall loss."
-      }
-    ],
-    lessonsLearned: [
-      "Naive semantic search is insufficient for technical documentation with alphanumeric IDs; hybrid BM25 + dense retrieval is non-negotiable.",
-      "Context reranking produces far better synthesis answers than simply sending top-20 raw chunks to the LLM."
-    ],
-    codeSnippet: {
-      language: "python",
-      filename: "hybrid_rrf_reranker.py",
-      code: `def reciprocal_rank_fusion(dense_results, sparse_results, k=60):
-    """
-    Combines dense vector search scores and sparse BM25 ranks via RRF algorithm.
-    """
-    rrf_scores = {}
-    for rank, doc in enumerate(dense_results):
-        rrf_scores[doc.id] = rrf_scores.get(doc.id, 0) + 1 / (k + rank + 1)
-        
-    for rank, doc in enumerate(sparse_results):
-        rrf_scores[doc.id] = rrf_scores.get(doc.id, 0) + 1 / (k + rank + 1)
-        
-    sorted_docs = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
-    return sorted_docs[:20]  # Top 20 passed to Cross-Encoder`
-    },
-    futureImprovements: [
-      "Add speculative decoding for synthesis latency reduction below 50ms.",
-      "Implement automatic document graph construction using Neo4j for multi-entity relationship reasoning."
-    ]
-  },
-  {
-    id: "agentic-swarm-mcp",
-    title: "AgenticSwarm MCP Orchestrator",
-    slug: "agentic-swarm-mcp",
-    subtitle: "Stateful Multi-Agent Workflow Engine with Model Context Protocol",
-    category: "Multi-Agent",
-    description: "Autonomous multi-agent orchestration framework powered by LangGraph and MCP protocol. Agents dynamically coordinate code execution, Web research, SQL querying, and security compliance.",
-    coverImage: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80",
-    gallery: [
-      "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80"
-    ],
-    technologies: ["LangGraph", "Python", "MCP Protocol", "TypeScript", "FastAPI", "PostgreSQL", "Docker", "Temporal.io"],
-    featured: true,
-    githubUrl: "https://github.com/Nestcy/agentic-swarm-mcp",
-    liveDemoUrl: "https://agentic-swarm.demo.ai-arch.dev",
-    videoDemoUrl: "https://youtube.com/watch?v=demo_agentic_swarm",
-    metrics: [
-      { label: "Agent Task Accuracy", value: "98.2%" },
-      { label: "Parallel Tool Calls", value: "12 / sec" },
-      { label: "Self-Healing Rate", value: "91.4%" },
-      { label: "MCP Tools Integrated", value: "28" }
-    ],
-    problem: "Single-prompt agent pipelines get stuck in loop locks when encountering unexpected API schema errors or code syntax bugs during autonomous task execution.",
-    solution: "Engineered a stateful cyclic graph architecture with LangGraph and MCP (Model Context Protocol). Included supervisor evaluation nodes, human-in-the-loop checkpoints, and dynamic plan re-routing upon error catching.",
-    architectureDescription: "User Prompt -> Supervisor Agent -> Task Decomposition Graph -> Parallel Tool Execution Nodes (Code Sandbox, SQL, Web Search, Github API) -> Critique & Verification Node -> Final Artifact Generator.",
-    architectureNodes: [
-      { id: "1", label: "User Task Request", type: "client", status: "Active" },
-      { id: "2", label: "Supervisor Agent Node", type: "model", status: "Active" },
-      { id: "3", label: "MCP Tool Executor Swarm", type: "gateway", status: "Active" },
-      { id: "4", label: "Isolated Code Sandbox", type: "db", status: "Active" },
-      { id: "5", label: "Critique & Human Approval Gate", type: "cache", status: "Active" }
-    ],
-    technicalChallenges: [
-      {
-        title: "Preventing Infinite Recursion Loops in Autonomous Agent Swarms",
-        detail: "Implemented deterministic state graph constraints with exponential backoff and LLM self-reflection state inspection.",
-        metricImpact: "Zero infinite loops across 100,000 automated workflow runs."
-      }
-    ],
-    lessonsLearned: [
-      "Agents need strict, typed output schematics (Pydantic v2) at every node transition to prevent state drift.",
-      "The Model Context Protocol (MCP) drastically simplifies tool sharing across multiple LLM providers."
-    ],
-    codeSnippet: {
-      language: "typescript",
-      filename: "supervisor_agent.ts",
-      code: `import { StateGraph, END } from "@langchain/langgraph";
-
-export function createSwarmWorkflow() {
-  const workflow = new StateGraph({ channels: stateChannels });
-  
-  workflow.addNode("planner", plannerAgent);
-  workflow.addNode("coder", codeGeneratorAgent);
-  workflow.addNode("verifier", codeVerifierAgent);
-  workflow.addNode("mcp_executor", mcpToolExecutor);
-
-  workflow.addEdge("planner", "coder");
-  workflow.addConditionalEdges("coder", (state) => {
-    return state.hasErrors ? "verifier" : "mcp_executor";
-  });
-  
-  return workflow.compile();
-}`
-    },
-    futureImprovements: [
-      "Integrate persistent memory vector layers using Zep for multi-session agent context retention."
-    ]
-  },
-  {
-    id: "vision-defect-guard",
-    title: "VisionGuard Industrial Inspection AI",
-    slug: "vision-defect-guard",
-    subtitle: "Real-Time 120 FPS Computer Vision Defect Detection System",
-    category: "Computer Vision",
-    description: "Edge AI visual defect detection system for high-speed manufacturing assembly lines. Combines YOLOv8 TensorRT optimized inference with SAM (Segment Anything) zero-shot anomaly detection.",
-    coverImage: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80",
-    gallery: [
-      "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=1200&q=80"
-    ],
-    technologies: ["TensorRT", "YOLOv8", "OpenCV", "PyTorch", "NVIDIA Jetson", "C++", "CUDA", "gRPC"],
-    featured: true,
-    githubUrl: "https://github.com/Nestcy/vision-defect-guard",
-    liveDemoUrl: "https://visionguard.demo.ai-arch.dev",
-    videoDemoUrl: "https://youtube.com/watch?v=demo_visionguard",
-    metrics: [
-      { label: "FPS Processing", value: "128 FPS" },
-      { label: "Defect Recall Rate", value: "99.8%" },
-      { label: "End-to-End Latency", value: "7.8ms" },
-      { label: "FP Rate", value: "< 0.02%" }
-    ],
-    problem: "Manual industrial surface quality check suffered from high false negatives and missed subtle micro-cracks on silicon wafers moving at 2.5 meters/second.",
-    solution: "Engineered a hybrid vision model using TensorRT INT8 quantized YOLOv8 for sub-10ms bounding box detection, coupled with OpenCV CUDA hardware acceleration and zero-shot Segment Anything fallback.",
-    architectureDescription: "Industrial GigE Camera -> NVIDIA DeepStream SDK -> CUDA Memory Ring Buffer -> TensorRT INT8 YOLOv8 Model -> Real-time PLC Hardware Trigger.",
-    architectureNodes: [
-      { id: "1", label: "GigE Industrial Camera Stream", type: "client", status: "Active" },
-      { id: "2", label: "NVIDIA DeepStream Pipeline", type: "gateway", status: "Active" },
-      { id: "3", label: "TensorRT INT8 Model CUDA Kernel", type: "model", status: "Active" },
-      { id: "4", label: "Anomaly Telemetry DB", type: "db", status: "Active" }
-    ],
-    technicalChallenges: [
-      {
-        title: "Jitter and Dropped Frames under High Industrial Lighting Fluctuations",
-        detail: "Implemented custom adaptive brightness normalization in CUDA C++ before feeding tensor buffers into neural inference.",
-        metricImpact: "Maintained 0 frame drops over 72 hours of uninterrupted stress testing."
-      }
-    ],
-    lessonsLearned: [
-      "Converting PyTorch models to TensorRT INT8 requires careful calibration dataset selection to avoid precision collapse on fine visual details."
-    ],
-    codeSnippet: {
-      language: "cpp",
-      filename: "cuda_inference_pipeline.cu",
-      code: `__global__ void preprocess_kernel(const uint8_t* src, float* dst, int width, int height) {
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if (x < width && y < height) {
-        int idx = (y * width + x) * 3;
-        dst[0 * width * height + y * width + x] = (src[idx + 0] / 255.0f - 0.485f) / 0.229f;
-        dst[1 * width * height + y * width + x] = (src[idx + 1] / 255.0f - 0.456f) / 0.224f;
-        dst[2 * width * height + y * width + x] = (src[idx + 2] / 255.0f - 0.406f) / 0.225f;
-    }
-}`
-    },
-    futureImprovements: [
-      "Deploy model quantization directly to edge microcontrollers using TensorRT-Micro."
-    ]
-  },
-  {
-    id: "vllm-speculative-gateway",
-    title: "SpeculativeLLM Inference Gateway",
-    slug: "vllm-speculative-gateway",
-    subtitle: "High-Throughput Distributed LLM Serving with Draft Models",
-    category: "LLM Platform",
-    description: "Production LLM router featuring Speculative Decoding, PagedAttention via vLLM, and dynamic load balancing across GPU clusters to slash token costs by 45%.",
-    coverImage: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80",
-    gallery: [
-      "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80"
-    ],
-    technologies: ["vLLM", "Python", "Rust", "Ray", "Triton Inference Server", "Kubernetes", "Prometheus"],
-    featured: false,
-    githubUrl: "https://github.com/Nestcy/vllm-speculative-gateway",
-    liveDemoUrl: "https://llm-gateway.demo.ai-arch.dev",
-    metrics: [
-      { label: "Token Acceleration", value: "2.4x Speedup" },
-      { label: "GPU VRAM Efficiency", value: "+310%" },
-      { label: "P99 Latency Reduction", value: "52%" },
-      { label: "Cost Savings", value: "45%" }
-    ],
-    problem: "Autoregressive generation on 70B parameter LLMs was cost-prohibitive and bottlenecked by GPU memory bandwidth for low-latency user chat interactions.",
-    solution: "Deployed a speculative decoding architecture utilizing a small 1B draft model (Qwen-1.5B) to draft token candidates, verified in parallel by Llama-3-70B using custom PagedAttention memory pools.",
-    architectureDescription: "Incoming WebSocket -> Rust Load Balancer -> Ray Cluster Node -> Draft Model Fast Generation -> Target Model Parallel Acceptance Matrix -> Stream Output.",
-    architectureNodes: [
-      { id: "1", label: "Rust API Router", type: "gateway", status: "Active" },
-      { id: "2", label: "Ray Distributed Cluster", type: "client", status: "Active" },
-      { id: "3", label: "Draft Model (Qwen-1.5B)", type: "model", status: "Active" },
-      { id: "4", label: "Target Model (Llama3-70B)", type: "model", status: "Active" }
-    ],
-    technicalChallenges: [
-      {
-        title: "Draft Acceptance Rate Degradation on Complex Code Contexts",
-        detail: "Fine-tuned the draft model specifically on acceptance candidate distributions generated by the target model.",
-        metricImpact: "Increased token acceptance rate from 62% to 84%."
-      }
-    ],
-    lessonsLearned: [
-      "Speculative decoding delivers massive throughput improvements when draft and target models share tokenizers and alignment distributions."
-    ],
-    codeSnippet: {
-      language: "python",
-      filename: "speculative_engine.py",
-      code: `async function generate_speculative_tokens(draft_model, target_model, prompt, k=5):
-    draft_tokens = await draft_model.generate_draft_candidates(prompt, steps=k)
-    accepted_mask = await target_model.verify_batch(prompt, draft_tokens)
-    return [token for token, is_valid in zip(draft_tokens, accepted_mask) if is_valid]`
-    },
-    futureImprovements: [
-      "Implement medusa-style multi-head decoding to eliminate the separate draft model overhead."
     ]
   }
 ];
@@ -519,44 +266,38 @@ At the core of modern generative AI lies the attention calculation. Given input 
 
 export const CERTIFICATIONS_DATA: Certification[] = [
   {
-    id: "cert-nvidia-llm",
-    title: "NVIDIA Certified Specialist - Building Transformer & LLM Applications",
-    institution: "NVIDIA Deep Learning Institute",
-    issueDate: "2026-01",
-    credentialId: "NV-LLM-892104",
-    credentialUrl: "https://nvidia.com/verify/NV-LLM-892104",
+    id: "cert-ibm-rag-agentic-ai",
+    title: "IBM RAG and Agentic AI Professional Certificate",
+    institution: "IBM & Coursera",
+    issueDate: "July 2026",
+    credentialId: "H85ML5SY000K",
+    credentialUrl: "https://coursera.org/share/ea5c9e052722d6f7216d26e873738a29",
     badgeImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=200&q=80",
-    skillsVerified: ["TensorRT-LLM", "CUDA Kernels", "Transformer Optimization", "Multi-GPU Distributed Training"]
+    skillsVerified: [
+      "RAG & Advanced Retrievers",
+      "LangGraph & LangChain",
+      "Multi-Agent Architectures (CrewAI, AutoGen, BeeAI)",
+      "Vector Databases & Embeddings",
+      "Multimodal Generative AI",
+      "Tool Calling & Function Execution"
+    ]
   },
   {
-    id: "cert-aws-ml",
-    title: "AWS Certified Machine Learning - Specialty",
-    institution: "Amazon Web Services",
-    issueDate: "2025-11",
-    credentialId: "AWS-MLS-49120",
-    credentialUrl: "https://aws.amazon.com/verification",
-    badgeImage: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=200&q=80",
-    skillsVerified: ["SageMaker", "Feature Store", "Distributed Training", "MLOps Pipelines"]
-  },
-  {
-    id: "cert-deeplearning-agents",
-    title: "AI Agent System Architect Certification",
-    institution: "DeepLearning.AI",
-    issueDate: "2025-08",
-    credentialId: "DLAI-AGENT-77291",
-    credentialUrl: "https://coursera.org/verify/DLAI-AGENT-77291",
-    badgeImage: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=200&q=80",
-    skillsVerified: ["LangGraph", "Autonomous Swarms", "Tool Calling Safety", "MCP Servers"]
-  },
-  {
-    id: "cert-gcp-ml",
-    title: "Google Cloud Professional Machine Learning Engineer",
-    institution: "Google Cloud",
-    issueDate: "2025-04",
-    credentialId: "GCP-MLE-33910",
-    credentialUrl: "https://google.com/credentials",
+    id: "cert-ibm-deep-learning",
+    title: "IBM Deep Learning with PyTorch, Keras and Tensorflow",
+    institution: "IBM & Coursera",
+    issueDate: "May 2026",
+    credentialId: "U4IRO74IGM05",
+    credentialUrl: "https://coursera.org/share/f6e662773fb30d1cf5531c250ffc09e6",
     badgeImage: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=200&q=80",
-    skillsVerified: ["Vertex AI", "BigQuery ML", "Kubeflow", "Model Monitoring"]
+    skillsVerified: [
+      "Deep Learning with PyTorch",
+      "Neural Networks & Keras",
+      "TensorFlow 2 & Custom Models",
+      "Convolutional Neural Networks (CNNs)",
+      "Transformer Models & Sequence Prediction",
+      "AI Capstone Project"
+    ]
   }
 ];
 
