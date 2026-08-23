@@ -45,7 +45,7 @@ export const PROJECTS_DATA: Project[] = [
     technologies: ["Python", "LangGraph", "FastAPI", "Groq (Llama 3.1 / 3.3)", "PostgreSQL", "Celery", "Redis", "Pydantic", "React"],
     featured: true,
     githubUrl: "https://github.com/Nestcy/marketing_agent",
-    liveDemoUrl: "https://market-chat.onrender.com/",
+    liveDemoUrl: "https://ernest-zimba.onrender.com",
     videoDemoUrl: "",
     metrics: [
       { label: "Approval Gates", value: "2 (Plan & Day)" },

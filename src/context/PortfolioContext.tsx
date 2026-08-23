@@ -239,7 +239,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             if (p.id === 'marketing-agent') {
               return {
                 ...p,
-                liveDemoUrl: 'https://market-chat.onrender.com/'
+                liveDemoUrl: 'https://ernest-zimba.onrender.com'
               };
             }
             return p;
@@ -573,7 +573,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               if (p.id === 'marketing-agent') {
                 return {
                   ...p,
-                  liveDemoUrl: 'https://market-chat.onrender.com/',
+                  liveDemoUrl: 'https://ernest-zimba.onrender.com',
                   coverImage: (!p.coverImage || p.coverImage.includes('unsplash.com/photo-1460925895917')) ? INITIAL_PROJECTS_DATA[0].coverImage : p.coverImage,
                   gallery: (!p.gallery || p.gallery.some((g: string) => g.includes('unsplash.com/photo-1460925895917'))) ? INITIAL_PROJECTS_DATA[0].gallery : p.gallery
                 };

@@ -36,7 +36,7 @@ ${certifications.map(c => `• ${c.title} — ${c.institution} (${c.issueDate})\
 FEATURED PRODUCTION SYSTEMS:
 ${projects.slice(0, 4).map(p => {
   const isMarketingAgent = p.id === 'marketing-agent' || p.title.toLowerCase().includes('marketing agent');
-  const linkText = isMarketingAgent ? `Product Page: ${p.liveDemoUrl || 'https://market-chat.onrender.com/'}` : `GitHub: ${p.githubUrl || p.liveDemoUrl}`;
+  const linkText = isMarketingAgent ? `Product Page: ${p.liveDemoUrl || 'https://ernest-zimba.onrender.com'}` : `GitHub: ${p.githubUrl || p.liveDemoUrl}`;
   return `• ${p.title}\n  ${p.subtitle}\n  ${linkText}`;
 }).join('\n\n')}
 
@@ -241,7 +241,7 @@ ${skills.map(s => s.name).join(', ')}
               <div class="grid-2">
                 ${projects.slice(0, 4).map(p => {
                   const isMarketingAgent = p.id === 'marketing-agent' || p.title.toLowerCase().includes('marketing agent');
-                  const targetUrl = isMarketingAgent ? (p.liveDemoUrl || 'https://market-chat.onrender.com/') : p.githubUrl;
+                  const targetUrl = isMarketingAgent ? (p.liveDemoUrl || 'https://ernest-zimba.onrender.com') : p.githubUrl;
                   const label = isMarketingAgent ? 'Product Page' : 'GitHub';
                   return `
                     <div class="stat-box">
@@ -371,7 +371,7 @@ ${skills.map(s => s.name).join(', ')}
   <div class="section-title">Featured Production Systems</div>
   ${projects.slice(0, 4).map(p => {
     const isMarketingAgent = p.id === 'marketing-agent' || p.title.toLowerCase().includes('marketing agent');
-    const targetUrl = isMarketingAgent ? (p.liveDemoUrl || 'https://market-chat.onrender.com/') : p.githubUrl;
+    const targetUrl = isMarketingAgent ? (p.liveDemoUrl || 'https://ernest-zimba.onrender.com') : p.githubUrl;
     const label = isMarketingAgent ? 'Product Page' : 'GitHub';
     return `
       <div class="card">
@@ -575,7 +575,7 @@ ${skills.map(s => s.name).join(', ')}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {projects.slice(0, 4).map(p => {
                 const isMarketingAgent = p.id === 'marketing-agent' || p.title.toLowerCase().includes('marketing agent');
-                const targetUrl = isMarketingAgent ? (p.liveDemoUrl || 'https://market-chat.onrender.com/') : p.githubUrl;
+                const targetUrl = isMarketingAgent ? (p.liveDemoUrl || 'https://ernest-zimba.onrender.com') : p.githubUrl;
                 const label = isMarketingAgent ? 'Product Page' : 'GitHub';
                 return (
                   <div key={p.id} className="p-3 bg-[#161514] border border-[#2a2826] space-y-1.5 flex flex-col justify-between">
