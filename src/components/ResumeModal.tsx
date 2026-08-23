@@ -8,7 +8,7 @@ interface ResumeModalProps {
 }
 
 export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => {
-  const { personalInfo, workExperience, education, projects, certifications, skills } = usePortfolio();
+  const { personalInfo, workExperience, education, projects, certifications, skills, timeline } = usePortfolio();
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -22,19 +22,23 @@ GitHub: ${personalInfo.github} | LinkedIn: ${personalInfo.linkedin}
 EXECUTIVE SUMMARY:
 ${personalInfo.bio}
 
-CORE BENCHMARKS:
-${personalInfo.stats.map(s => `• ${s.label}: ${s.value}`).join('\n')}
+CAREER TRACK & WORK EXPERIENCE:
+${(timeline || []).map(t => `• [${t.year}] ${t.title} — ${t.organization} (${t.type})\n  ${t.description}\n  Impact: ${t.impact}`).join('\n\n')}
 
-EXPERIENCE:
-${workExperience.map(exp => `
-${exp.role} — ${exp.company} (${exp.period})
-${exp.points.map(pt => `  * ${pt}`).join('\n')}`).join('\n')}
+${workExperience.map(exp => `• [${exp.period}] ${exp.role} — ${exp.company}\n${exp.points.map(pt => `  * ${pt}`).join('\n')}`).join('\n\n')}
 
 EDUCATION:
 ${education.map(edu => `• ${edu.degree} — ${edu.institution} (${edu.year})`).join('\n')}
 
 INDUSTRY CERTIFICATIONS (VERIFIABLE CREDENTIALS):
 ${certifications.map(c => `• ${c.title} — ${c.institution} (${c.issueDate})\n  Credential ID: ${c.credentialId}\n  Verifiable Source: ${c.credentialUrl}\n  Verified Skills: ${c.skillsVerified.join(', ')}`).join('\n\n')}
+
+FEATURED PRODUCTION SYSTEMS:
+${projects.slice(0, 4).map(p => {
+  const isMarketingAgent = p.id === 'marketing-agent' || p.title.toLowerCase().includes('marketing agent');
+  const linkText = isMarketingAgent ? `Product Page: ${p.liveDemoUrl || 'https://market-chat.onrender.com/'}` : `GitHub: ${p.githubUrl || p.liveDemoUrl}`;
+  return `• ${p.title}\n  ${p.subtitle}\n  ${linkText}`;
+}).join('\n\n')}
 
 CORE SKILLS:
 ${skills.map(s => s.name).join(', ')}
@@ -169,17 +173,21 @@ ${skills.map(s => s.name).join(', ')}
               <div class="section-title">EXECUTIVE SUMMARY</div>
               <p style="margin-top:0;">${personalInfo.bio}</p>
 
-              <div class="section-title">CORE BENCHMARKS</div>
-              <div class="grid-2">
-                ${personalInfo.stats.map(s => `
-                  <div class="stat-box">
-                    <div class="stat-lbl">${s.label}</div>
-                    <div class="stat-val">${s.value}</div>
+              <div class="section-title">CAREER TRACK & WORK EXPERIENCE</div>
+              ${timeline && timeline.length > 0 ? `
+                ${timeline.map(item => `
+                  <div class="exp-card">
+                    <div class="exp-header">
+                      <span>${item.title} — ${item.organization} ${item.type ? `[${item.type}]` : ''}</span>
+                      <span class="period">${item.year}</span>
+                    </div>
+                    <p style="margin: 4px 0 2px 0;">${item.description}</p>
+                    ${item.impact ? `<div style="color: #4b5563; font-size: 11px;"><strong>Impact:</strong> ${item.impact}</div>` : ''}
+                    ${item.skillsUsed && item.skillsUsed.length > 0 ? `<div style="color: #6b7280; font-size: 10px; margin-top: 2px;"><strong>Skills:</strong> ${item.skillsUsed.join(', ')}</div>` : ''}
                   </div>
                 `).join('')}
-              </div>
+              ` : ''}
 
-              <div class="section-title">WORK EXPERIENCE</div>
               ${workExperience.map(exp => `
                 <div class="exp-card">
                   <div class="exp-header">
@@ -231,17 +239,22 @@ ${skills.map(s => s.name).join(', ')}
 
               <div class="section-title">FEATURED PRODUCTION SYSTEMS</div>
               <div class="grid-2">
-                ${projects.slice(0, 4).map(p => `
-                  <div class="stat-box">
-                    <strong style="display:block; font-size:12px;">${p.title}</strong>
-                    <span style="color:#6b7280;">${p.subtitle}</span>
-                    ${p.githubUrl ? `
-                      <div style="margin-top:2px;">
-                        <a href="${p.githubUrl}" target="_blank" style="color:#ea580c; font-size:9px; text-decoration:underline;">GitHub: ${p.githubUrl}</a>
-                      </div>
-                    ` : ''}
-                  </div>
-                `).join('')}
+                ${projects.slice(0, 4).map(p => {
+                  const isMarketingAgent = p.id === 'marketing-agent' || p.title.toLowerCase().includes('marketing agent');
+                  const targetUrl = isMarketingAgent ? (p.liveDemoUrl || 'https://market-chat.onrender.com/') : p.githubUrl;
+                  const label = isMarketingAgent ? 'Product Page' : 'GitHub';
+                  return `
+                    <div class="stat-box">
+                      <strong style="display:block; font-size:12px;">${p.title}</strong>
+                      <span style="color:#6b7280;">${p.subtitle}</span>
+                      ${targetUrl ? `
+                        <div style="margin-top:2px;">
+                          <a href="${targetUrl}" target="_blank" style="color:#ea580c; font-size:9px; text-decoration:underline;">${label}: ${targetUrl}</a>
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
               </div>
 
               <div class="section-title">CORE SKILLS & TECHNOLOGIES</div>
@@ -299,7 +312,21 @@ ${skills.map(s => s.name).join(', ')}
   <div class="section-title">Executive Summary</div>
   <p>${personalInfo.bio}</p>
 
-  <div class="section-title">Work Experience</div>
+  <div class="section-title">Career Track & Work Experience</div>
+  ${timeline && timeline.length > 0 ? `
+    ${timeline.map(item => `
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; font-weight:bold;">
+          <span>${item.title} — ${item.organization} ${item.type ? `[${item.type}]` : ''}</span>
+          <span style="color:#ea580c;">${item.year}</span>
+        </div>
+        <p style="margin:4px 0;">${item.description}</p>
+        ${item.impact ? `<div style="font-size:12px; color:#4b5563;"><strong>Impact:</strong> ${item.impact}</div>` : ''}
+        ${item.skillsUsed && item.skillsUsed.length > 0 ? `<div style="font-size:11px; color:#6b7280; margin-top:2px;"><strong>Skills:</strong> ${item.skillsUsed.join(', ')}</div>` : ''}
+      </div>
+    `).join('')}
+  ` : ''}
+
   ${workExperience.map(exp => `
     <div class="card">
       <div style="display:flex; justify-content:space-between; font-weight:bold;">
@@ -340,6 +367,20 @@ ${skills.map(s => s.name).join(', ')}
       ` : ''}
     </div>
   `).join('')}
+
+  <div class="section-title">Featured Production Systems</div>
+  ${projects.slice(0, 4).map(p => {
+    const isMarketingAgent = p.id === 'marketing-agent' || p.title.toLowerCase().includes('marketing agent');
+    const targetUrl = isMarketingAgent ? (p.liveDemoUrl || 'https://market-chat.onrender.com/') : p.githubUrl;
+    const label = isMarketingAgent ? 'Product Page' : 'GitHub';
+    return `
+      <div class="card">
+        <div style="font-weight:bold;">${p.title}</div>
+        <p style="margin:4px 0;">${p.subtitle}</p>
+        ${targetUrl ? `<div style="font-size:11px;"><a href="${targetUrl}" target="_blank" style="color:#ea580c;">${label}: ${targetUrl} ↗</a></div>` : ''}
+      </div>
+    `;
+  }).join('')}
 
   <div class="section-title">Core Skills</div>
   <p>${skills.map(s => s.name).join(', ')}</p>
@@ -447,21 +488,45 @@ ${skills.map(s => s.name).join(', ')}
             </p>
           </div>
 
-          {/* Key Metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {personalInfo.stats.map((s, idx) => (
-              <div key={idx} className="p-2.5 bg-[#161514] border border-[#2a2826] font-mono">
-                <div className="text-[9px] text-zinc-500 uppercase">{s.label}</div>
-                <div className="text-base font-bold font-oswald text-[#ff4d00]">{s.value}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Experience Section */}
+          {/* Career Track & Work Experience */}
           <div className="space-y-3">
-            <span className="label-tag">WORK_EXPERIENCE</span>
+            <span className="label-tag">CAREER_TRACK_&_WORK_EXPERIENCE</span>
             
             <div className="space-y-3">
+              {/* Timeline Milestones */}
+              {timeline && timeline.map((item) => (
+                <div key={item.id} className="p-3.5 bg-[#161514] border border-[#2a2826] space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-1 font-bold text-white">
+                    <div className="font-oswald uppercase text-sm tracking-wide flex items-center space-x-2">
+                      <span>{item.title} — {item.organization}</span>
+                      {item.type && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#ff4d00]/10 border border-[#ff4d00]/30 text-[#ff4d00] font-mono normal-case">
+                          {item.type}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[#ff4d00] font-mono text-xs">{item.year}</span>
+                  </div>
+                  <p className="text-zinc-300 text-xs">{item.description}</p>
+                  {item.impact && (
+                    <div className="text-[11px] text-zinc-400 font-mono">
+                      <span className="text-[#ff4d00] font-bold">&gt; Impact: </span>
+                      {item.impact}
+                    </div>
+                  )}
+                  {item.skillsUsed && item.skillsUsed.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {item.skillsUsed.map((sk, idx) => (
+                        <span key={idx} className="px-1.5 py-0.5 bg-[#0d0c0b] border border-[#2a2826] text-zinc-400 text-[10px] font-mono">
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Work Experience */}
               {workExperience.map((exp) => (
                 <div key={exp.id} className="p-3.5 bg-[#161514] border border-[#2a2826] space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-1 font-bold text-white">
@@ -508,12 +573,35 @@ ${skills.map(s => s.name).join(', ')}
           <div className="space-y-2">
             <span className="label-tag">FEATURED_SYSTEMS</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {projects.slice(0, 4).map(p => (
-                <div key={p.id} className="p-3 bg-[#161514] border border-[#2a2826] space-y-0.5">
-                  <div className="font-bold text-white text-xs uppercase font-oswald">{p.title}</div>
-                  <div className="text-[11px] text-zinc-400 line-clamp-2">&gt; {p.subtitle}</div>
-                </div>
-              ))}
+              {projects.slice(0, 4).map(p => {
+                const isMarketingAgent = p.id === 'marketing-agent' || p.title.toLowerCase().includes('marketing agent');
+                const targetUrl = isMarketingAgent ? (p.liveDemoUrl || 'https://market-chat.onrender.com/') : p.githubUrl;
+                const label = isMarketingAgent ? 'Product Page' : 'GitHub';
+                return (
+                  <div key={p.id} className="p-3 bg-[#161514] border border-[#2a2826] space-y-1.5 flex flex-col justify-between">
+                    <div>
+                      <div className="font-bold text-white text-xs uppercase font-oswald flex items-center justify-between gap-1">
+                        <span className="truncate">{p.title}</span>
+                      </div>
+                      <div className="text-[11px] text-zinc-400 line-clamp-2 mt-0.5">&gt; {p.subtitle}</div>
+                    </div>
+                    {targetUrl && (
+                      <div className="pt-1 border-t border-zinc-800/80 flex items-center justify-between">
+                        <span className="text-zinc-500 text-[9px] font-mono">{isMarketingAgent ? 'Interactive Showcase' : 'Repository'}</span>
+                        <a
+                          href={targetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`${isMarketingAgent ? 'text-[#ff4d00] hover:text-[#ff7733]' : 'text-zinc-400 hover:text-white'} font-bold text-[9px] flex items-center space-x-0.5 underline uppercase font-mono`}
+                        >
+                          <span>{label}</span>
+                          <ExternalLink className="w-2.5 h-2.5 ml-0.5 inline" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
