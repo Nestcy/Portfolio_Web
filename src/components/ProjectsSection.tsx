@@ -85,22 +85,13 @@ export const ProjectsSection: React.FC = () => {
                   <span className="text-zinc-500 uppercase">{project.category}</span>
                 </div>
 
-                {/* Cover Image */}
-                <div className="relative h-44 overflow-hidden bg-black cursor-pointer" onClick={() => setSelectedProject(project)}>
+                {/* Cover Image Preview (Clean and Unobstructed) */}
+                <div className="relative h-48 overflow-hidden bg-black cursor-pointer" onClick={() => setSelectedProject(project)}>
                   <img
                     src={project.coverImage}
                     alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-80 group-hover:opacity-100"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#161514] via-[#161514]/30 to-transparent" />
-                  
-                  {/* Primary Metric Tag */}
-                  {project.metrics[0] && (
-                    <div className="absolute bottom-3 right-3 bg-[#0d0c0b]/90 backdrop-blur border border-[#2a2826] px-2.5 py-1 text-right font-mono">
-                      <div className="text-[9px] text-zinc-500 uppercase">{project.metrics[0].label}</div>
-                      <div className="text-xs font-bold text-[#ff4d00]">{project.metrics[0].value}</div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Body Content */}
@@ -114,6 +105,18 @@ export const ProjectsSection: React.FC = () => {
                   <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3 font-geist">
                     {project.description}
                   </p>
+
+                  {/* Evaluation Metrics (Rendered in card body, NOT on image preview) */}
+                  {project.metrics && project.metrics.length > 0 && (
+                    <div className="pt-2 border-t border-[#2a2826] flex flex-wrap gap-2 font-mono">
+                      {project.metrics.slice(0, 2).map((m, mIdx) => (
+                        <div key={mIdx} className="px-2 py-1 bg-[#0d0c0b] border border-[#2a2826] text-[10px] flex items-center space-x-1.5 rounded-sm">
+                          <span className="text-zinc-500 uppercase">{m.label}:</span>
+                          <span className="text-[#ff4d00] font-bold">{m.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

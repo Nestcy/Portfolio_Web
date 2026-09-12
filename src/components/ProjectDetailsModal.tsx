@@ -67,49 +67,47 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ projec
           {/* Tab 1: Overview */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Cover Image & Links */}
-              <div className="relative rounded-lg overflow-hidden border border-zinc-800 group">
+              {/* Cover Image & Action Links */}
+              <div className="rounded-lg overflow-hidden border border-zinc-800 bg-black">
                 <img
                   src={project.coverImage}
                   alt={project.title}
-                  className="w-full h-56 sm:h-72 object-cover opacity-90"
+                  className="w-full max-h-96 object-contain bg-black"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex items-end p-5">
-                  <div className="flex flex-wrap items-center gap-2.5 w-full">
+                <div className="p-3.5 bg-zinc-950 border-t border-zinc-800 flex flex-wrap items-center gap-2.5">
+                  <a
+                    href={project.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white text-xs font-mono uppercase font-semibold flex items-center space-x-2 rounded transition-all"
+                  >
+                    <Github className="w-3.5 h-3.5" />
+                    <span>GitHub</span>
+                  </a>
+
+                  {project.liveDemoUrl && (
                     <a
-                      href={project.githubUrl}
+                      href={project.liveDemoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white text-xs font-mono uppercase font-semibold flex items-center space-x-2 rounded transition-all"
+                      className="px-3.5 py-1.5 bg-white hover:bg-zinc-200 text-black text-xs font-mono uppercase font-bold flex items-center space-x-2 rounded transition-all"
                     >
-                      <Github className="w-3.5 h-3.5" />
-                      <span>GitHub</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Live Demo</span>
                     </a>
+                  )}
 
-                    {project.liveDemoUrl && (
-                      <a
-                        href={project.liveDemoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3.5 py-1.5 bg-white hover:bg-zinc-200 text-black text-xs font-mono uppercase font-bold flex items-center space-x-2 rounded transition-all"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Live Demo</span>
-                      </a>
-                    )}
-
-                    {project.videoDemoUrl && (
-                      <a
-                        href={project.videoDemoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3.5 py-1.5 bg-red-950/40 hover:bg-red-900/60 border border-red-800/80 text-red-300 text-xs font-mono uppercase font-semibold flex items-center space-x-2 rounded transition-all"
-                      >
-                        <Youtube className="w-3.5 h-3.5" />
-                        <span>Video Demo</span>
-                      </a>
-                    )}
-                  </div>
+                  {project.videoDemoUrl && (
+                    <a
+                      href={project.videoDemoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-1.5 bg-red-950/40 hover:bg-red-900/60 border border-red-800/80 text-red-300 text-xs font-mono uppercase font-semibold flex items-center space-x-2 rounded transition-all"
+                    >
+                      <Youtube className="w-3.5 h-3.5" />
+                      <span>Video Demo</span>
+                    </a>
+                  )}
                 </div>
               </div>
 
