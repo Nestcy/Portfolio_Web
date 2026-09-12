@@ -14,11 +14,13 @@ import {
   CheckCircle2,
   Layers,
   Copy,
-  Download
+  Download,
+  Image as ImageIcon
 } from 'lucide-react';
 import { ProjectEditorModal } from './ProjectEditorModal';
 import { ProjectUploadModal } from './ProjectUploadModal';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
+import { processImageFile } from '../../utils/imageUtils';
 
 export const AdminProjectsTab: React.FC = () => {
   const { projects, deleteProject, updateProject, addProject, securitySettings } = usePortfolio();
@@ -36,6 +38,17 @@ export const AdminProjectsTab: React.FC = () => {
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleQuickImageUpload = async (projectId: string, file: File) => {
+    try {
+      const dataUrl = await processImageFile(file);
+      updateProject(projectId, { coverImage: dataUrl });
+      showNotification('Project cover image updated successfully');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to process image';
+      showNotification(`Upload error: ${msg}`);
+    }
   };
 
   const filteredProjects = projects.filter(p => {
@@ -218,6 +231,39 @@ export const AdminProjectsTab: React.FC = () => {
                     >
                       <Trash2 className="w-3.5 h-3.5 text-red-400" />
                     </button>
+                  </div>
+                </div>
+
+                {/* Project Cover Image with Quick Upload */}
+                <div className="relative group/cover w-full h-32 bg-zinc-950 border border-zinc-800/90 rounded overflow-hidden flex items-center justify-center">
+                  {project.coverImage ? (
+                    <img
+                      src={project.coverImage}
+                      alt={project.title}
+                      className="w-full h-full object-cover group-hover/cover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-zinc-600 space-y-1">
+                      <ImageIcon className="w-5 h-5 text-zinc-700" />
+                      <span className="text-[10px] font-mono uppercase">No Cover Image</span>
+                    </div>
+                  )}
+
+                  {/* Quick Upload Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/75 opacity-0 group-hover/cover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
+                    <label className="px-2.5 py-1.5 bg-[#ff4d00] hover:bg-[#ff5e1a] text-black text-[10px] font-mono font-bold uppercase rounded flex items-center space-x-1 cursor-pointer transition-colors shadow">
+                      <Upload className="w-3 h-3" />
+                      <span>{project.coverImage ? 'Upload / Replace Cover' : 'Upload Cover'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleQuickImageUpload(project.id, f);
+                        }}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
                 </div>
 

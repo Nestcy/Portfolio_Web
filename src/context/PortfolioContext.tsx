@@ -239,7 +239,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             if (p.id === 'marketing-agent') {
               return {
                 ...p,
-                liveDemoUrl: 'https://ernest-zimba.onrender.com'
+                liveDemoUrl: 'https://market-chat.onrender.com/',
+                videoDemoUrl: 'https://www.dropbox.com/scl/fi/s5oowu48nao2pwzka0qib/InShot_20260816_120054996.mp4?rlkey=7p1gc5wfr5w675ta5l25e7d25&st=936xc0yd&dl=0'
               };
             }
             return p;
@@ -573,7 +574,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               if (p.id === 'marketing-agent') {
                 return {
                   ...p,
-                  liveDemoUrl: 'https://ernest-zimba.onrender.com',
+                  liveDemoUrl: 'https://market-chat.onrender.com/',
+                  videoDemoUrl: 'https://www.dropbox.com/scl/fi/s5oowu48nao2pwzka0qib/InShot_20260816_120054996.mp4?rlkey=7p1gc5wfr5w675ta5l25e7d25&st=936xc0yd&dl=0',
                   coverImage: (!p.coverImage || p.coverImage.includes('unsplash.com/photo-1460925895917')) ? INITIAL_PROJECTS_DATA[0].coverImage : p.coverImage,
                   gallery: (!p.gallery || p.gallery.some((g: string) => g.includes('unsplash.com/photo-1460925895917'))) ? INITIAL_PROJECTS_DATA[0].gallery : p.gallery
                 };

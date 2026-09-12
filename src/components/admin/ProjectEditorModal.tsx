@@ -19,8 +19,13 @@ import {
   CheckSquare,
   Video,
   Upload,
-  Play
+  Play,
+  Image as ImageIcon,
+  Plus,
+  AlertCircle,
+  RotateCcw
 } from 'lucide-react';
+import { processImageFile, PROJECT_IMAGE_PRESETS } from '../../utils/imageUtils';
 
 interface ProjectEditorModalProps {
   project?: Project | null;
@@ -47,6 +52,7 @@ interface FormState {
   liveDemoUrl: string;
   videoDemoUrl: string;
   coverImage: string;
+  gallery: string[];
   featured: boolean;
   problem: string;
   architectureDescription: string;
@@ -65,9 +71,12 @@ const projectToFormState = (p?: Project | null): FormState => {
       subtitle: "Businesses need a consistent social content presence but don't have time to plan and write it daily — and fully autonomous posting tools solve that by removing the human from what actually ships.",
       category: 'Multi-Agent',
       githubUrl: 'https://github.com/Nestcy/marketing_agent',
-      liveDemoUrl: 'https://chat-ad-architect.lovable.app',
+      liveDemoUrl: 'https://market-chat.onrender.com/',
       videoDemoUrl: '',
-      coverImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+      coverImage: '/src/assets/images/marketing_agent_ui_1787498725335.jpg',
+      gallery: [
+        '/src/assets/images/marketing_agent_ui_1787498725335.jpg'
+      ],
       featured: true,
       problem: `Small businesses either do their own social content (time they don't have) or hand it to a tool that generates and posts autonomously (which removes their judgment from what represents their brand). I wanted a middle path: an AI that does the actual planning and writing work, but never publishes anything without an explicit human approval — at both the strategy level and the individual-post level.`,
       architectureDescription: `Business input -> Research Node (Tavily + Firecrawl, capped context) -> Planner Node (single LLM call -> 3-day strategy outline) -> PLAN GATE (human: approve / refine) -> Day Content Node (per day: caption + ad copy variants + image prompt) -> DAY GATE (human: approve / tweak) -> Persisted state (Postgres) -> REST API + Chat interface -> Celery Beat (daily cron)`,
@@ -115,6 +124,7 @@ Added hard caps to web scrapes, made model selection configurable per call-site,
     liveDemoUrl: p.liveDemoUrl || '',
     videoDemoUrl: p.videoDemoUrl || '',
     coverImage: p.coverImage || '',
+    gallery: p.gallery || [],
     featured: p.featured ?? true,
     problem: p.problem || p.description || '',
     architectureDescription: p.architectureDescription || '',
@@ -133,6 +143,8 @@ ${f.subtitle || 'One-sentence problem statement'}
 
 [Live Demo] → ${f.liveDemoUrl || 'https://demo.example.com'}
 [GitHub] → ${f.githubUrl || 'https://github.com/user/repo'}
+[Cover Image] → ${f.coverImage || ''}
+[Video Demo] → ${f.videoDemoUrl || ''}
 
 ---
 
@@ -186,6 +198,12 @@ export const ProjectEditorModal: React.FC<ProjectEditorModalProps> = ({
   const [editorMode, setEditorMode] = useState<'form' | 'markdown'>('form');
   const [formState, setFormState] = useState<FormState>(() => projectToFormState(project));
   const [markdownText, setMarkdownText] = useState<string>(() => formStateToMarkdown(projectToFormState(project)));
+  const [isCoverDragOver, setIsCoverDragOver] = useState(false);
+  const [isGalleryDragOver, setIsGalleryDragOver] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [galleryUrlInput, setGalleryUrlInput] = useState('');
+  const [showPresets, setShowPresets] = useState(false);
 
   const handleVideoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -199,12 +217,50 @@ export const ProjectEditorModal: React.FC<ProjectEditorModalProps> = ({
     }
   };
 
+  const handleImageFile = async (file: File, target: 'cover' | 'gallery') => {
+    setImageError(null);
+    setIsProcessingImage(true);
+    try {
+      const dataUrl = await processImageFile(file);
+      if (target === 'cover') {
+        setFormState(prev => ({ ...prev, coverImage: dataUrl }));
+      } else {
+        setFormState(prev => ({ ...prev, gallery: [...prev.gallery, dataUrl] }));
+      }
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to process image file';
+      setImageError(errorMsg);
+    } finally {
+      setIsProcessingImage(false);
+    }
+  };
+
+  const handleAddGalleryUrl = () => {
+    if (!galleryUrlInput.trim()) return;
+    setFormState(prev => ({
+      ...prev,
+      gallery: [...prev.gallery, galleryUrlInput.trim()]
+    }));
+    setGalleryUrlInput('');
+  };
+
+  const handleRemoveGalleryImage = (index: number) => {
+    setFormState(prev => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleModeChange = (newMode: 'form' | 'markdown') => {
     if (newMode === 'markdown') {
       setMarkdownText(formStateToMarkdown(formState));
     } else {
       // Sync from markdown back to form state if needed
       const titleMatch = markdownText.match(/^#\s+(.+)$/m);
+      const coverMatch = markdownText.match(/\[Cover Image\]\s*→\s*(.+)$/m) || markdownText.match(/!\[.*?\]\((.+?)\)/);
+      const videoMatch = markdownText.match(/\[Video Demo\]\s*→\s*(.+)$/m);
+      const liveDemoMatch = markdownText.match(/\[Live Demo\]\s*→\s*(.+)$/m);
+      const githubMatch = markdownText.match(/\[GitHub\]\s*→\s*(.+)$/m);
       const problemMatch = markdownText.match(/###\s+(?:THE PROBLEM|Problem)\s+([\s\S]*?)(?=---|###|$)/i);
       const systemMatch = markdownText.match(/###\s+(?:THE SYSTEM|System|Architecture)\s+([\s\S]*?)(?=---|###|$)/i);
       const worksMatch = markdownText.match(/###\s+(?:HOW IT WORKS|How It Works|Solution)\s+([\s\S]*?)(?=---|###|$)/i);
@@ -218,6 +274,10 @@ export const ProjectEditorModal: React.FC<ProjectEditorModalProps> = ({
         setFormState(prev => ({
           ...prev,
           title: titleMatch[1].trim(),
+          coverImage: coverMatch ? coverMatch[1].trim() : prev.coverImage,
+          videoDemoUrl: videoMatch ? videoMatch[1].trim() : prev.videoDemoUrl,
+          liveDemoUrl: liveDemoMatch ? liveDemoMatch[1].trim() : prev.liveDemoUrl,
+          githubUrl: githubMatch ? githubMatch[1].trim() : prev.githubUrl,
           problem: problemMatch ? problemMatch[1].trim() : prev.problem,
           architectureDescription: systemMatch ? systemMatch[1].trim() : prev.architectureDescription,
           solution: worksMatch ? worksMatch[1].trim() : prev.solution,
@@ -260,9 +320,9 @@ export const ProjectEditorModal: React.FC<ProjectEditorModalProps> = ({
       category: formState.category,
       description: formState.problem || formState.subtitle,
       coverImage: formState.coverImage || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
-      gallery: project?.gallery || [
-        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80'
-      ],
+      gallery: formState.gallery && formState.gallery.length > 0 ? formState.gallery : (project?.gallery || [
+        formState.coverImage || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80'
+      ]),
       technologies: techArray,
       featured: formState.featured,
       githubUrl: formState.githubUrl,
@@ -448,19 +508,8 @@ export const ProjectEditorModal: React.FC<ProjectEditorModalProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">COVER IMAGE URL</label>
-                    <input
-                      type="text"
-                      value={formState.coverImage}
-                      onChange={(e) => setFormState(prev => ({ ...prev, coverImage: e.target.value }))}
-                      placeholder="https://images.unsplash.com/photo-..."
-                      className="w-full px-3 py-2 bg-black border border-zinc-800 rounded text-xs text-zinc-400 font-mono focus:outline-none focus:border-zinc-600"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-3 pt-5">
+                <div className="flex items-center justify-between p-3 bg-zinc-950 border border-zinc-800/80 rounded-lg">
+                  <div className="flex items-center space-x-3">
                     <input
                       type="checkbox"
                       id="featured"
@@ -468,10 +517,238 @@ export const ProjectEditorModal: React.FC<ProjectEditorModalProps> = ({
                       onChange={(e) => setFormState(prev => ({ ...prev, featured: e.target.checked }))}
                       className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-[#ff4d00] focus:ring-0 cursor-pointer"
                     />
-                    <label htmlFor="featured" className="text-xs font-mono text-zinc-200 uppercase cursor-pointer select-none">
+                    <label htmlFor="featured" className="text-xs font-mono text-zinc-200 uppercase cursor-pointer select-none font-bold">
                       Feature on Primary Portfolio Feed
                     </label>
                   </div>
+                  <span className="text-[10px] text-zinc-500 font-mono">
+                    {formState.featured ? 'Status: FEATURED' : 'Status: STANDARD'}
+                  </span>
+                </div>
+
+                {/* PROJECT COVER IMAGE SPECIFICATION & UPLOAD */}
+                <div className="p-3.5 bg-black/90 border border-zinc-800/90 rounded-lg space-y-3 font-mono">
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80">
+                    <label className="text-[10px] text-zinc-200 uppercase font-bold flex items-center space-x-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-[#ff4d00]" />
+                      <span>PROJECT COVER IMAGE SPECIFICATION</span>
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowPresets(!showPresets)}
+                        className="text-[10px] text-zinc-400 hover:text-white font-mono flex items-center space-x-1 cursor-pointer transition-colors"
+                      >
+                        <Sparkles className="w-3 h-3 text-[#ff4d00]" />
+                        <span>{showPresets ? 'Hide Presets' : 'Choose Preset'}</span>
+                      </button>
+                      {formState.coverImage && (
+                        <button
+                          type="button"
+                          onClick={() => setFormState(prev => ({ ...prev, coverImage: '' }))}
+                          className="text-[10px] text-rose-400 hover:text-rose-300 font-mono underline flex items-center space-x-1 cursor-pointer transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Clear Image</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Preset Selector Panel */}
+                  {showPresets && (
+                    <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg space-y-2">
+                      <div className="text-[10px] text-zinc-400 font-bold uppercase">Quick Architectural Presets:</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {PROJECT_IMAGE_PRESETS.map((preset, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setFormState(prev => ({ ...prev, coverImage: preset.url }));
+                              setShowPresets(false);
+                            }}
+                            className="flex items-center space-x-2 p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-[#ff4d00] rounded text-left transition-colors cursor-pointer group"
+                          >
+                            <img src={preset.url} alt={preset.name} className="w-8 h-8 rounded object-cover shrink-0 border border-zinc-700" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[11px] font-bold text-zinc-200 group-hover:text-white truncate">{preset.name}</div>
+                              <div className="text-[9px] text-zinc-500">{preset.category}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dual Input: URL or File Upload */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Option 1: URL Input */}
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-zinc-400 uppercase font-bold">1. Image URL / Web Link</span>
+                      <input
+                        type="text"
+                        value={formState.coverImage}
+                        onChange={(e) => setFormState(prev => ({ ...prev, coverImage: e.target.value }))}
+                        placeholder="https://images.unsplash.com/... or hosted URL"
+                        className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded text-xs text-zinc-300 font-mono focus:outline-none focus:border-zinc-600"
+                      />
+                    </div>
+
+                    {/* Option 2: File Upload (Click or Drag & Drop) */}
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-zinc-400 uppercase font-bold">2. Upload Local Image File</span>
+                      <label
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsCoverDragOver(true);
+                        }}
+                        onDragLeave={() => setIsCoverDragOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsCoverDragOver(false);
+                          const file = e.dataTransfer.files?.[0];
+                          if (file) handleImageFile(file, 'cover');
+                        }}
+                        className={`flex items-center justify-center space-x-2 px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-dashed rounded text-xs text-zinc-300 cursor-pointer transition-colors ${
+                          isCoverDragOver ? 'border-[#ff4d00] bg-[#ff4d00]/10 text-white' : 'border-zinc-700 hover:border-[#ff4d00]'
+                        }`}
+                      >
+                        <Upload className="w-3.5 h-3.5 text-[#ff4d00]" />
+                        <span className="font-mono text-[11px] uppercase truncate">
+                          {isProcessingImage ? 'Optimizing image...' : formState.coverImage?.startsWith('data:image') ? 'Uploaded Local File (Click to Replace)' : 'Browse or Drop PNG, JPG, WEBP'}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageFile(file, 'cover');
+                          }}
+                          className="hidden"
+                          disabled={isProcessingImage}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {imageError && (
+                    <div className="p-2 bg-rose-950/40 border border-rose-800 text-rose-300 text-xs flex items-center space-x-1.5 rounded">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{imageError}</span>
+                    </div>
+                  )}
+
+                  {/* Active Cover Image Preview Box */}
+                  {formState.coverImage && (
+                    <div className="p-2.5 bg-zinc-950 border border-zinc-800/90 rounded space-y-2">
+                      <div className="text-[10px] text-zinc-400 flex items-center justify-between">
+                        <span className="flex items-center space-x-1.5 text-emerald-400 font-bold">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>COVER IMAGE ACTIVE ({formState.coverImage.startsWith('data:image') ? 'Uploaded Local File' : 'External Web URL'})</span>
+                        </span>
+                        <span className="font-mono text-[9px] text-zinc-500 truncate max-w-[200px]">
+                          {formState.coverImage.startsWith('data:image') ? 'Optimized Local Data' : formState.coverImage}
+                        </span>
+                      </div>
+
+                      <div className="relative group rounded overflow-hidden border border-zinc-800 max-h-56 bg-black flex items-center justify-center">
+                        <img
+                          src={formState.coverImage}
+                          alt="Project Cover Preview"
+                          className="w-full max-h-56 object-contain rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* PROJECT GALLERY / ARCHITECTURE DIAGRAMS (SCREENSHOTS) */}
+                <div className="p-3.5 bg-black/90 border border-zinc-800/90 rounded-lg space-y-3 font-mono">
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80">
+                    <label className="text-[10px] text-zinc-200 uppercase font-bold flex items-center space-x-1.5">
+                      <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>PROJECT GALLERY / ARCHITECTURE SCREENSHOTS (Optional)</span>
+                    </label>
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      {formState.gallery.length} screenshot{formState.gallery.length === 1 ? '' : 's'} attached
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Add by URL */}
+                    <div className="flex items-center space-x-1.5">
+                      <input
+                        type="text"
+                        value={galleryUrlInput}
+                        onChange={(e) => setGalleryUrlInput(e.target.value)}
+                        placeholder="Add image / diagram URL..."
+                        className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded text-xs text-zinc-300 font-mono focus:outline-none focus:border-zinc-600"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddGalleryUrl();
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddGalleryUrl}
+                        className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-zinc-700 text-xs font-bold uppercase rounded shrink-0 transition-colors cursor-pointer"
+                      >
+                        Add URL
+                      </button>
+                    </div>
+
+                    {/* Upload gallery image file */}
+                    <label
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsGalleryDragOver(true);
+                      }}
+                      onDragLeave={() => setIsGalleryDragOver(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsGalleryDragOver(false);
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) handleImageFile(file, 'gallery');
+                      }}
+                      className={`flex items-center justify-center space-x-2 px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-dashed rounded text-xs text-zinc-300 cursor-pointer transition-colors ${
+                        isGalleryDragOver ? 'border-cyan-400 bg-cyan-950/20 text-white' : 'border-zinc-700 hover:border-cyan-400'
+                      }`}
+                    >
+                      <Upload className="w-3.5 h-3.5 text-cyan-400" />
+                      <span className="font-mono text-[11px] uppercase truncate">Upload Screenshot / Diagram File</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageFile(file, 'gallery');
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Gallery Thumbnails List */}
+                  {formState.gallery.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                      {formState.gallery.map((imgUrl, idx) => (
+                        <div key={idx} className="relative group border border-zinc-800 rounded overflow-hidden bg-black aspect-video flex items-center justify-center">
+                          <img src={imgUrl} alt={`Gallery screenshot ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveGalleryImage(idx)}
+                            className="absolute top-1 right-1 p-1 bg-black/80 hover:bg-rose-900 text-zinc-300 hover:text-white rounded transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                            title="Remove screenshot"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* DEMO VIDEO SPECIFICATION FIELD & UPLOAD PLACEHOLDER */}
@@ -537,9 +814,9 @@ export const ProjectEditorModal: React.FC<ProjectEditorModalProps> = ({
                         </span>
                       </div>
 
-                      {formState.videoDemoUrl.startsWith('data:video') || formState.videoDemoUrl.endsWith('.mp4') || formState.videoDemoUrl.endsWith('.webm') ? (
+                      {formState.videoDemoUrl.startsWith('data:video') || formState.videoDemoUrl.includes('dropbox.com') || formState.videoDemoUrl.includes('.mp4') || formState.videoDemoUrl.endsWith('.webm') ? (
                         <video
-                          src={formState.videoDemoUrl}
+                          src={formState.videoDemoUrl.includes('dropbox.com') ? formState.videoDemoUrl.replace('dl=0', 'raw=1').replace('dl=1', 'raw=1') : formState.videoDemoUrl}
                           controls
                           className="w-full max-h-48 object-contain bg-black rounded border border-zinc-800"
                         />

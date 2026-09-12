@@ -161,9 +161,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ projec
                     </a>
                   </div>
 
-                  {project.videoDemoUrl.startsWith('data:video') || project.videoDemoUrl.endsWith('.mp4') || project.videoDemoUrl.endsWith('.webm') ? (
+                  {project.videoDemoUrl.startsWith('data:video') || project.videoDemoUrl.includes('dropbox.com') || project.videoDemoUrl.includes('.mp4') || project.videoDemoUrl.endsWith('.webm') ? (
                     <video
-                      src={project.videoDemoUrl}
+                      src={project.videoDemoUrl.includes('dropbox.com') ? project.videoDemoUrl.replace('dl=0', 'raw=1').replace('dl=1', 'raw=1') : project.videoDemoUrl}
                       controls
                       className="w-full max-h-[380px] object-contain bg-black rounded-lg border border-zinc-800 shadow-xl"
                     />

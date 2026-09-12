@@ -45,8 +45,8 @@ export const PROJECTS_DATA: Project[] = [
     technologies: ["Python", "LangGraph", "FastAPI", "Groq (Llama 3.1 / 3.3)", "PostgreSQL", "Celery", "Redis", "Pydantic", "React"],
     featured: true,
     githubUrl: "https://github.com/Nestcy/marketing_agent",
-    liveDemoUrl: "https://ernest-zimba.onrender.com",
-    videoDemoUrl: "",
+    liveDemoUrl: "https://market-chat.onrender.com/",
+    videoDemoUrl: "https://www.dropbox.com/scl/fi/s5oowu48nao2pwzka0qib/InShot_20260816_120054996.mp4?rlkey=7p1gc5wfr5w675ta5l25e7d25&st=936xc0yd&dl=0",
     metrics: [
       { label: "Approval Gates", value: "2 (Plan & Day)" },
       { label: "Publishing Control", value: "100% Human Approval" },
